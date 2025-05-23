@@ -6,14 +6,15 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int main() {
+int main(int argc, char* argv[]) {
   // #Question - are these the same type?
-  std::string message = "Hello from client";
+  // #Answer - no, they are not; "Hello from client" is a string literal (const char*) and the variable message is an std::string
+  std::string message = (std::string)argv[1];
   const int kPort = 8080;
   const std::string kServerAddress = "127.0.0.1";
   sockaddr_in address;
   const int kBufferSize = 1024;
-  char buffer[kBufferSize] = {0};
+  char buffer[kBufferSize] = {0}; 
   // Creating socket file descriptor
   int my_sock = socket(AF_INET, SOCK_STREAM, 0);
   if (my_sock < 0) {
