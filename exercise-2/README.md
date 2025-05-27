@@ -103,8 +103,11 @@
 - Make sure to commit each change as small and self-contained commit
 - This will make it easier to revert your code if you need to
 - What is `git tag`? How is `git tag` different from `git branch`?
-- How can you use `git tag` and `git branch` to make programming easier and
-  more fun?
+  - `git tag` can be used to create important checkpoints (eg. stable releases) in the history of the project
+  - `git branch` allows a developer to work on additional features parallelly, without affecting the main branch
+- How can you use `git tag` and `git branch` to make programming easier and more fun?
+  - Once we have a working version of the project, we can use `git tag` to create a checkpoint of the current version of the codebase, maybe calling it `stable release v1.0` 
+  - Additionally, we can also parallelly work on additional experimental features in a separate branch (using `git branch`), so that any bugs in development dont affect the main branch 
 
 ## Learn Basics of Debugging in Your IDE
 
