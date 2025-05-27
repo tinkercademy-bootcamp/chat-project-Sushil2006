@@ -43,6 +43,8 @@ void connect_to_server(int sock, sockaddr_in &server_address) {
 void send_and_receive_message(int sock, const std::string &message) {
   const int kBufferSize = 1024;
   // #Question - is buffer the best name we can use?
+  // #Answer - it's fine, but we can do better by being more descriptive
+  // We can go for a variable name like receive_buffer to specify that we are using the buffer to store the message returned by the server
   char buffer[kBufferSize] = {0};
 
   // Send the message to the server
@@ -61,6 +63,8 @@ void send_and_receive_message(int sock, const std::string &message) {
 }
 
 // #Question - what can be improved in this function?
+// #Answer - avoid exitting by failure when message argument is not passed, just send the default message instead (make sure to specify correct usage pattern though)
+// The additional if (argc > 1) can be replaced with an else that follows the previous if-statement; avoids an additional branch
 std::string read_args(int argc, char *argv[]) {
   std::string message = "Hello from client";
   if (argc == 1) {
@@ -73,20 +77,7 @@ std::string read_args(int argc, char *argv[]) {
   return message;
 }
 
-struct my_struct{
-  std::string s;
-  int x;
-  short y;
-  bool z;
-};
-
 int main(int argc, char *argv[]) {
-  my_struct ms;
-  ms.s = "hiii";
-  ms.x = 8;
-  ms.y = 10;
-  ms.z = 1;
-
   const int kPort = 8080;
   const std::string kServerAddress = "127.0.0.1";
 
