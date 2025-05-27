@@ -12,7 +12,8 @@
   overview and protocol families
 - Or type `man 7 socket` in terminal
 - When would you want to use a `SOCK_RAW` stream?
-
+  - When we want to implement our own communication protocol rather than using pre-built protocols like TCP/UDP
+  - Allows for greater level of customization depending on specific requirements
 ### TCP and IP Protocols
 - [IPv4](https://www.rfc-editor.org/info/rfc791) - Internet Protocol 
   specification defining packet structure and routing
@@ -24,17 +25,36 @@
 ### C++
 - [C++23 ISO standard draft](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/n4950.pdf) - 
   Working draft of the C++ language specification
-- Is the above the official C++23 spec? 
+- Is the above the official C++23 spec?
+  - No, it's just a draft of the C++23 spe 
 - Where is the official C++23 spec?
+  - It's not available for free
+  - It has to be purchased from the official ISO website: https://www.iso.org/standard/83626.html
 - Why was this link chosen instead?
+  - The official C++23 spec is not available for free
+  - Amongst all free resources, the spec draft is the closest to the official ISO spec; the spec draft is sufficient for most use-cases
+  - The ISO release fixes slight inconsistencies in terminology and grammatical mistakes from the spec draft, they dont differ by a very huge extent
 - Is this a helpful reference for learning C++?
-- Can the various implementations of C++ compilers be different from the
-  C++ standard?
+  - No, because it's a very huge document that is very detailed; should be used only as a reference
+  - It's almost impossible to learn and remember every single thing specified in the spec
+- Can the various implementations of C++ compilers be different from the C++ standard?
+  - Yes, they can; Eg: compiler is still under development to handle a new container that has been introduced in the latest C++ version
+  - However, such differences from the spec would be clearly specified
 - What are the most widely used and most significant C++ compilers?
+  - g++, clang, msvc
 - Where is the equivalent spec for C++26?
-
+  - Draft: https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/n5008.pdf
+  - Official ISO spec is not yet out for C++26
 - Where do you find the spec for the HTTP protocol?
+  - It can be found in the following series of links:
+  - https://datatracker.ietf.org/doc/html/rfc9110
+  - https://datatracker.ietf.org/doc/html/rfc9112
+  - https://datatracker.ietf.org/doc/html/rfc9113
+  - https://datatracker.ietf.org/doc/html/rfc9114
 - What about HTTPS? Is there a spec for that protocol?
+  - HTTPS is just HTTP + TLS
+  - The spec for HTTP has already been given above; the spec for TLS is linked below
+  - TLS: https://datatracker.ietf.org/doc/html/rfc8446
 
 ## Introduction to C++ and Sockets Programming
 
@@ -106,4 +126,9 @@
 ### Memory Management and Debug Mode in Your IDE
 
 - How do you see the memory layout of a `std::string` from your IDE debug mode?
+  - Downloaded the extension `MemoryView` on vscode
+  - Opens up a panel on the bottom of the screen where we can view the contents of the memory
+  - Enter the memory address of the `std::string` that we want to view, after which the focus of the memory view is moved to that memory address; shows memory address, hex values (8-bits in 1 cell) and decoded unicode character side by side
 - How do you see the memory layout of a struct from your IDE debug mode?
+  - Find the memory address of the struct
+  - Enter the memory address in the memory viewer to get a view of the struct's memory layout 

@@ -73,7 +73,20 @@ std::string read_args(int argc, char *argv[]) {
   return message;
 }
 
+struct my_struct{
+  std::string s;
+  int x;
+  short y;
+  bool z;
+};
+
 int main(int argc, char *argv[]) {
+  my_struct ms;
+  ms.s = "hiii";
+  ms.x = 8;
+  ms.y = 10;
+  ms.z = 1;
+
   const int kPort = 8080;
   const std::string kServerAddress = "127.0.0.1";
 
