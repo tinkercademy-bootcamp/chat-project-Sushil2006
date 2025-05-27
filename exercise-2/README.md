@@ -12,7 +12,8 @@
   overview and protocol families
 - Or type `man 7 socket` in terminal
 - When would you want to use a `SOCK_RAW` stream?
-
+  - When we want to implement our own communication protocol rather than using pre-built protocols like TCP/UDP
+  - Allows for greater level of customization depending on specific requirements
 ### TCP and IP Protocols
 - [IPv4](https://www.rfc-editor.org/info/rfc791) - Internet Protocol 
   specification defining packet structure and routing
@@ -24,36 +25,74 @@
 ### C++
 - [C++23 ISO standard draft](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/n4950.pdf) - 
   Working draft of the C++ language specification
-- Is the above the official C++23 spec? 
+- Is the above the official C++23 spec?
+  - No, it's just a draft of the C++23 spe 
 - Where is the official C++23 spec?
+  - It's not available for free
+  - It has to be purchased from the official ISO website: https://www.iso.org/standard/83626.html
 - Why was this link chosen instead?
+  - The official C++23 spec is not available for free
+  - Amongst all free resources, the spec draft is the closest to the official ISO spec; the spec draft is sufficient for most use-cases
+  - The ISO release fixes slight inconsistencies in terminology and grammatical mistakes from the spec draft, they dont differ by a very huge extent
 - Is this a helpful reference for learning C++?
-- Can the various implementations of C++ compilers be different from the
-  C++ standard?
+  - No, because it's a very huge document that is very detailed; should be used only as a reference
+  - It's almost impossible to learn and remember every single thing specified in the spec
+- Can the various implementations of C++ compilers be different from the C++ standard?
+  - Yes, they can; Eg: compiler is still under development to handle a new container that has been introduced in the latest C++ version
+  - However, such differences from the spec would be clearly specified
 - What are the most widely used and most significant C++ compilers?
+  - g++, clang, msvc
 - Where is the equivalent spec for C++26?
-
+  - Draft: https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/n5008.pdf
+  - Official ISO spec is not yet out for C++26
 - Where do you find the spec for the HTTP protocol?
+  - It can be found in the following series of links:
+  - https://datatracker.ietf.org/doc/html/rfc9110
+  - https://datatracker.ietf.org/doc/html/rfc9112
+  - https://datatracker.ietf.org/doc/html/rfc9113
+  - https://datatracker.ietf.org/doc/html/rfc9114
 - What about HTTPS? Is there a spec for that protocol?
+  - HTTPS is just HTTP + TLS
+  - The spec for HTTP has already been given above; the spec for TLS is linked below
+  - TLS: https://datatracker.ietf.org/doc/html/rfc8446
 
 ## Introduction to C++ and Sockets Programming
 
 - Read the code in `src/`
-- Are there any bugs in this code? 
+- Are there any bugs in this code?
+  - Executed the code for multiple cases and the code worked as expected; here are some cases that I considered:
+    - Start server, send message from client
+    - Send message from client without starting the server
+    - Call the client without supplying the message argument on the command line  
+  - I also carefully analyzed the new version of the client and the server codes against the previous version that was presented in exercise 1, and there dont seem to be any discrepancies
 - What can you do to identify if there are bugs in the code?
+  - Write strong unit tests that cover all possible cases
 
 ## Refactoring: Extract Function
 
 - What is different in this code compared to exercise-1?
+  - The code's functionality has remained the same, it's just the code style that has changed
+  - The code is more modular - the entire chunk of code from exercise 1 has been broken down into multiple different functions
+  - This has improved readability and makes the code more self-explanatory
+  - It also allows for us to reuse blocks of code without rewriting them again - for example, when we want to create another socket
 - Is this code better or worse than exercise-1?
+  - It's better, for the same reasons that were mentioned in the previous answer
 - What are the tradeoffs compared to exercise-1?
+  - Better code readability and maintainability for the cost of a higher file size and a slightly higher size of the generated binary
 - Are you able to spot any mistakes or inconsistencies in the changes?
-  
+  - None
 ## Thinking About Performance
 
 - Does writing code this way have any impact on performance?
+  - There could be some slight performance overhead due to the function calls being made
 - What do we mean when we say performance?
+  - Time taken to execute a program
+  - How efficiently the program is using system resources like CPU and memory
 - How do we measure performance in a program?
+  - Use the `time` command in linux
+  - If the performance of a specific function needs to be measured, then use timer functions from `std::chrono` 
+  - This is what I've been doing so far. However, in the bootcamp sessions, I learnt from the Jump engineers and Tinkertanker mentors that `std::chrono` is a bad way to measure performance and profiling is the way to go
+  - The goal of profiling is to get a full-scale analysis of what is going under the hood, like CPU usage, memory allocation, cache hits/misses etc; this gives us deeper insights about the factors that are limiting the performance of the program, allowing us to target and optimize the bottlenecks
 
 ## Play with Git
 
@@ -64,17 +103,35 @@
 - Make sure to commit each change as small and self-contained commit
 - This will make it easier to revert your code if you need to
 - What is `git tag`? How is `git tag` different from `git branch`?
-- How can you use `git tag` and `git branch` to make programming easier and
-  more fun?
+  - `git tag` can be used to create important checkpoints (eg. stable releases) in the history of the project
+  - `git branch` allows a developer to work on additional features parallelly, without affecting the main branch
+- How can you use `git tag` and `git branch` to make programming easier and more fun?
+  - Once we have a working version of the project, we can use `git tag` to create a checkpoint of the current version of the codebase, maybe calling it `stable release v1.0` 
+  - Additionally, we can also parallelly work on additional experimental features in a separate branch (using `git branch`), so that any bugs in development dont affect the main branch 
 
 ## Learn Basics of Debugging in Your IDE
 
 - How do you enable debug mode in your IDE?
+  - Select the `run and debug` tab on the left sidebar
+  - Appropriately configure the `launch.json` file
 - In debug mode, how do you add a watch?
+  - Select the `+` button near the `watch` tab, and write the name of the variable that we need to watch
+  - We could also right click on the variable in the `variables` tab and select the `add to watch` option 
 - In debug mode, how do you add a breakpoint?
+  - Click to the left of the line numbers where the breakpoint must be added - a red circle appears, indicating that a breakpoint has been setup on that line
 - In debug mode, how do you step through code?
+  - While debugging, a top-bar appears with all code-stepping options
+  - Continue: Runs the program till the next breakpoint/end of program is reached
+  - Step over: Executes the current line and moves to the next line
+  - Step in: Enters into a function call (if there is a function on the current line); if there are multiple functions, the function that would be evaluated first is stepped into
+  - Step out: Exits the current function and returns back to the caller
 
 ### Memory Management and Debug Mode in Your IDE
 
 - How do you see the memory layout of a `std::string` from your IDE debug mode?
+  - Downloaded the extension `MemoryView` on vscode
+  - Opens up a panel on the bottom of the screen where we can view the contents of the memory
+  - Enter the memory address of the `std::string` that we want to view, after which the focus of the memory view is moved to that memory address; shows memory address, hex values (8-bits in 1 cell) and decoded unicode character side by side
 - How do you see the memory layout of a struct from your IDE debug mode?
+  - Find the memory address of the struct
+  - Enter the memory address in the memory viewer to get a view of the struct's memory layout 
