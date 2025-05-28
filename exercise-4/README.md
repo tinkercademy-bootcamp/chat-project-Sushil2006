@@ -11,20 +11,21 @@
 - How would you compile using VS Code?
 
 ### Compiling vs Linking
-
 - What is the difference between compiling and linking in C++?
-- What is the difference between creating an executable and creating a 
-  library?
-- How do you compile a library, and then use that library to compile an
-  executable?
-
+  - Compiler translates a cpp file to a `.o` file; it does not resolve references to function declarations that are defined elsewhere
+  - Linker combines all `.o` files and libraries into a single executable; this resolves references to function declarations that are defined elsewhere 
+- What is the difference between creating an executable and creating a library?
+  - Executable is a standalone binary that can be run
+  - Libary contains reusable code that can be linked to other programs; note that library is not a standalone program
+- How do you compile a library, and then use that library to compile an executable?
+  
 ### Reminder 
 [Quickstart tutorial to make](https://makefiletutorial.com/) - Learn make 
 fundamentals with practical examples and common patterns.
 
 ## Experiments in Performance
-
-- Is it better to have many small files spread across many directories, or
-  a few large files across fewer directories?
+- Is it better to have many small files spread across many directories, or a few large files across fewer directories?
 - Is there a difference in compilation time between the two?
 - How can you assess performance other than compilation speed?
+  - Runtime
+  - Memory usage
