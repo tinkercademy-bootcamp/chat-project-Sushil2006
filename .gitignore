@@ -64,3 +64,5 @@ Thumbs.db
 /.classpath
 /.project
 /.settings/
+
+.vscode/
