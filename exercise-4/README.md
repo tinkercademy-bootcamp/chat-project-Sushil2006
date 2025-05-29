@@ -6,12 +6,12 @@
 
 - Move code that can be shared between `tcp_echo_server.cc` and 
   `tcp_echo_client.cc` to separate `.h` and `.cc` files
-  - [DO LATER]
+  - Done
 - How would you compile from the command line?
   - `g++ -std=c++20 src/tcp_echo_client.cc src/functions.cc -o build/client`
   - `g++ -std=c++20 src/tcp_echo_server.cc src/functions.cc -o build/server`
 - How would you compile using make?
-  - Updated `Makefile` to compile with the header files
+  - Updated `Makefile` to compile along with the `.cpp` file that contains all function definitions
 - How would you compile using VS Code?
   - Define a build task in `tasks.json` which triggers the `Makefile`
   - Or define a build task in `tasks.json` with all required command line arguments and compilation flags so that compilation can be done directly using `g++`
@@ -24,7 +24,14 @@
   - Executable is a standalone binary that can be run
   - Libary contains reusable code that can be linked to other programs; note that library is not a standalone program
 - How do you compile a library, and then use that library to compile an executable?
-  
+  - `g++ -std=c++20 -c functions.cpp -o functions.o` - Compiles the library file to an object file
+  - The `-c` flag specifies that we only have to compile the source file into an object file and not do any linking
+  - `ar rcs libfunctions.a functions.o` - Creates a static library archive from the object file
+  - `ar` is the archiver tool, which is used to create static library archives
+  - `g++ -std=c++20 main.cpp -L. -lfunctions -o main` - Compiles the main code and links it with the library archive
+  - Note that `lfunctions` expands to `libfunctions.a`
+  - `-L.` adds the current directory to the library search path, so that the linker can find `libfunctions.a` here
+
 ### Reminder 
 [Quickstart tutorial to make](https://makefiletutorial.com/) - Learn make 
 fundamentals with practical examples and common patterns.
