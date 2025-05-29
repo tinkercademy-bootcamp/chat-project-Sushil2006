@@ -6,9 +6,15 @@
 
 - Move code that can be shared between `tcp_echo_server.cc` and 
   `tcp_echo_client.cc` to separate `.h` and `.cc` files
+  - [DO LATER]
 - How would you compile from the command line?
+  - `g++ -std=c++20 src/tcp_echo_client.cc src/functions.cc -o build/client`
+  - `g++ -std=c++20 src/tcp_echo_server.cc src/functions.cc -o build/server`
 - How would you compile using make?
+  - Updated `Makefile` to compile with the header files
 - How would you compile using VS Code?
+  - Define a build task in `tasks.json` which triggers the `Makefile`
+  - Or define a build task in `tasks.json` with all required command line arguments and compilation flags so that compilation can be done directly using `g++`
 
 ### Compiling vs Linking
 - What is the difference between compiling and linking in C++?
