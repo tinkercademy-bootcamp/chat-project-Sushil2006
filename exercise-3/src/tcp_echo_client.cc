@@ -61,13 +61,8 @@ void send_and_receive_message(int sock, const std::string &message) {
 
 std::string read_args(int argc, char *argv[]) {
   std::string message = "Hello from client";
-  if (argc == 1) {
-    std::cout << "Usage: " << argv[0] << " <message>\n";
-    exit(EXIT_FAILURE);
-  }
-  if (argc > 1) {
-    message = argv[1];
-  }
+  std::string error_message = "Usage: " + (std::string)argv[0] + " <message>\n";
+  check_error(argc == 1, error_message);
   return message;
 }
 
