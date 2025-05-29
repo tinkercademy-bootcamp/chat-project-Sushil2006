@@ -31,7 +31,12 @@ fundamentals with practical examples and common patterns.
 
 ## Experiments in Performance
 - Is it better to have many small files spread across many directories, or a few large files across fewer directories?
+  - Many small files spread across many directories improves readability and maintainability
+  - But it also makes it harder to navigate through a large no.of files - need to make sure that all files are organized properly 
 - Is there a difference in compilation time between the two?
+  - Compilation time is faster for many small files, provided that a build system like `make` is being used
+  - This is because `make` only recompiles files that have changed since the last `make`
+  - Only small files have to be recompiled, compared to the other case where large files have to be recompiled for a simple change - the first one is obviously faster 
 - How can you assess performance other than compilation speed?
   - Runtime
   - Memory usage
