@@ -51,10 +51,22 @@
 ## Git Clone and Building from Source
 
 - Where is `g++` looking for the include files and library files?
+  - Note that there is a long list of directories that `g++` scans through in order, looking for the include files and library files 
+  - Include files (listing first 3 directories that are checked):
+    - `/usr/include/c++/14`
+    - `/usr/include/aarch64-linux-gnu/c++/14`
+    - `/usr/include/c++/14/backward`
+  - Library files (listing first 3 directories that are checked):
+    - `/usr/local/lib/aarch64-linux-gnu`
+    - `/lib/aarch64-linux-gnu`
+    - `/usr/lib/aarch64-linux-gnu`
 - How do you find out?
+  - Command to run for include search directories:
+    - `echo "" | g++ -E -x c++ -v -`
+  - Command to run for library search directories:
+    - `ld --verbose | grep SEARCH_DIR`
 
 ## C++ Package Managers
-
 - Why are there so many C++ package managers?
 - Which one is the best one?
 - Which are the most notable ways to manage the compilation of C++ projects?
