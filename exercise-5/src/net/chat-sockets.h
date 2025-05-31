@@ -7,14 +7,4 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../utils.h"
-
-namespace tt::chat::net {
-
-int create_socket();
-
-sockaddr_in create_address(int port);
-
-} // namespace tt::chat::net
-
-#endif // CHAT_SOCKETS_H
+#endif
