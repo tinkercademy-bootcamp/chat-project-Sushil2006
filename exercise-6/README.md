@@ -68,5 +68,17 @@
 
 ## C++ Package Managers
 - Why are there so many C++ package managers?
+  - C++ never had a standardized package manager like Python (`pip`)
+  - So different ecosystems like linux users, windows users, game devs etc created their own package managers 
 - Which one is the best one?
+  - `vcpkg`, for the following reasons:
+    - Actively maintained by Microsoft
+    - Integrates well with CMake
+    - Cross platform support
 - Which are the most notable ways to manage the compilation of C++ projects?
+  - Build systems:
+    - CMake
+    - Makefile
+  - Package managers:
+    - vcpkg
+    - Conan
