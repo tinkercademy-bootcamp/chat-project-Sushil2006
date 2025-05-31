@@ -1,6 +1,6 @@
 #include "chat-sockets.h"
 
-class Client : SocketClass {
+class Client : public SocketClass {
 public:
 
   sockaddr_in create_server_address(const std::string &server_ip, int port) {

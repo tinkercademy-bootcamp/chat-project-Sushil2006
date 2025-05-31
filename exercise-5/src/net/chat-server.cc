@@ -1,6 +1,6 @@
 #include "chat-sockets.h"
 
-class Server : SocketClass {
+class Server : public SocketClass {
 public:
 
   void set_socket_options(int sock, int opt) {
