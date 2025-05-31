@@ -1,13 +1,5 @@
-#include <arpa/inet.h>
-#include <cstdlib>
-#include <iostream>
-#include <netinet/in.h>
-#include <string>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include "net/chat-client.h"
+#include <string>
 
 std::string read_args(int argc, char *argv[]) {
   std::string message = "Hello from client";
