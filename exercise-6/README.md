@@ -9,11 +9,30 @@
   [More info here](https://github.com/gabime/spdlog) - Fast C++ logging 
   library with various sink types and formatting options
 - How do you compile this file using the `g++` CLI?
+  - `g++ -std=c++20 spdlog-hello-world-main.cc -o main -lspdlog -lfmt`
 - What do you need to change in your makefile to use this library?
+  - Compile with the following extra flags: `-lspdlog` and `-lfmt`
 - How many different ways can this library be added into your project?
+  - Through `snap install` and compiling with `-lspdlog` and `-lfmt` 
+  - `git clone` the `spdlog` github repo and move the `include/spdlog/` directory into the working directory; might have to compile with `-Ispdlog/include`, so that the linker knows where to look for the header files
+  - Note that the 2nd version doesnt need `-lpsdlog` and `-lfmt` flags, because it's a header-only implementation i.e the function definition and implementation are all contained in the header files itself
 - What are the tradeoffs in the different ways?
+  - `snap`:
+    - Shared system-wide, can be used for multiple projects
+    - Easy to install: just 1 command installs it for all projects
+    - Faster compile time
+    - Smaller binary size
+    - May depend on system-installed packages
+    - Low portability due to dependency on system-installed packages
+  - `git clone`:
+    - Portable - No external dependency once copied
+    - More flexibility - Can upgrade or downgrade the library without facing any system-related dependencies
+    - Installation more tedious, have to run `git clone` and copy the include directory into each project
+    - Larger binary size, all functions are compiled into the binary
+    - Higher compilation time
 - Why are there so many different ways to do it?
-  
+  - To give the developer the flexibility to choose the option that is more suitable for their use-case
+
 ## Static Linking vs Dynamic Linking
 
 - What are the differences between static linking and dynamic linking?

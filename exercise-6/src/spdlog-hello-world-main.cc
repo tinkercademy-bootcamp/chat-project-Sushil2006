@@ -1,8 +1,8 @@
-#include "spdlog/spdlog.h"
+#include <spdlog/spdlog.h>
 
 int main() {
   // https://github.com/gabime/spdlog/wiki/3.-Custom-formatting
-  spdlog::set_pattern("[%D %H:%M:%S.%F] [%^%l%$] [%s %!:%#] [%oms] [%ius]% v ");
+  // spdlog::set_pattern("[%D %H:%M:%S.%F] [%^%l%$] [%s %!:%#] [%oms] [%ius]% v ");
   spdlog::set_level(spdlog::level::debug);
   // spdlog::cfg::load_env_levels();
 
