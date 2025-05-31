@@ -10,9 +10,13 @@
 ## Using Classes
 
 - Here is one way to separate out the code into multiple files
-- Is this the best way to do it? 
+- Is this the best way to do it?
+  - It's a good attempt, but there is still scope for improvement
 - What are the advantages and disadvantages?
- 
+  - Related components are grouped together - For eg: server and client are clearly distinguished
+  - Proper namespace structure, without any conflicts
+  - `client-main.cc` and `server-main.cc` still contain function definitions; they can be moved to other files (just like it's done with `chat-sockets.cc`) so that the main code contains only the usage part 
+  
 ## Introduction to Namespace
 
 - There are different ways namespace is being used in this exercise
