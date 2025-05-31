@@ -14,4 +14,12 @@ public:
   sockaddr_in create_address(int port);
 };
 
+template <typename T, typename S> 
+void SocketClass::check_error(T test, S error_message) {
+  if (test) {
+    std::cerr << error_message << "\n";
+    throw std::runtime_error(error_message);
+  }
+}
+
 #endif
