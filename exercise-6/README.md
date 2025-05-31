@@ -34,10 +34,19 @@
   - To give the developer the flexibility to choose the option that is more suitable for their use-case
 
 ## Static Linking vs Dynamic Linking
-
 - What are the differences between static linking and dynamic linking?
+  - Static linking: the entire library code is copied into the final binary during compile time
+  - Dynamic linking: the library code is kept in a separate file and is loaded during runtime
 - What are the tradeoffs?
+  - Static linking produces a self-contained binary that offers good performance without any runtime dependencies for the cost of a larger binary size and higher compilation time
+  - Dynamic linking produces a binary with runtime dependencies with slightly worser performance, but with a smaller binary size and a lower compilation time
 - How do you enable static linking or dynamic linking in your makefile?
+  - Static linking:
+    - Compile with the `-static` flag
+    - List down all `.a` files (static library archive) to link with in the command
+  - Dynamic linking:
+    - `-L<path-to-lib>` tells the linker where to locate the library
+    - `-l<name>` tells the name of the library; for eg, `-lmylib` expands to `libmylib.so`
 
 ## Git Clone and Building from Source
 
