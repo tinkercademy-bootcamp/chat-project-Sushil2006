@@ -35,7 +35,13 @@
 
 - How do you judge what makes a particular choice of namespace and directory
   structure? 
+  - Related functions/variables are grouped together
+  - Avoids deep nesting
+  - Easily scalable
 - How do you judge what makes a good naming convention or programming style?
+  - Variable names make sense, improving readability
+  - Consistency of naming convention throughout the codebase
+  - Use appropriate case consistently (camelCase, snake_case etc)
 
 ## "Senses" in Programming
 
