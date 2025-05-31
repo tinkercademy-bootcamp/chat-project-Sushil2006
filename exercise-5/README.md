@@ -5,7 +5,8 @@
 ## Comparing File Changes
 
 - What's an easy way to identify the changes in source code from one exercise to another?
-  - Using the `diff` command in the terminal
+  - If it's just one file, then the `diff` command in the terminal can be used
+  - However if it's an entire directory that we are comparing, then we can use: `git diff --no-index dir1/ dir2/`
     
 ## Using Classes
 
@@ -16,7 +17,7 @@
   - Related components are grouped together - For eg: server and client are clearly distinguished
   - Proper namespace structure, without any conflicts
   - `client-main.cc` and `server-main.cc` still contain function definitions; they can be moved to other files (just like it's done with `chat-sockets.cc`) so that the main code contains only the usage part 
-  
+
 ## Introduction to Namespace
 
 - There are different ways namespace is being used in this exercise
@@ -30,10 +31,22 @@
 ## Abstracting Code into Classes
 
 - Abstract the client and server logic into a `Client` and `Server` class
+  - [DONE]
 - **Note**: You don't have to use the code in this exercise as a starting point
 - You can use the code you wrote from previous exercises instead
 - How should you divide the code into files?
+  - I abstracted the code into 3 different classes - `SocketClass`, `Client` and `Server`
+  - `Client` and `Server` inherit from `SocketClass` - `SocketClass` contains functions that are common to both `Client` and `Server`
+  - Each class is defined in 2 files:
+    - `.h` file which contains the class declaration and function declarations
+    - `.cc` file which contains the member function implementations for the class
+  - This is done for all 3 classes, giving us a total of 3 `.h` files and 3 `.cc`, all of which can be found inside the `net/` directory
+  - This abstraction has greatly simplifed the code in `client-main.cc` and `server-main.cc`, making the code very clean  
 - What namespace and directory structure should you use? Why?
+  - Group each module's `.h` and `.cc` files together in the same directory; makes it easy to jump between function declaration and function implementation
+  - For this project, there are only 3 such pairs of `h` and `.cc` files, so it's fine
+  - However, if the codebase is very large, then more subdirectories have to be created by grouping together related modules
+  - Use namespaces to reflect the directory structure i.e files in `net/` should have `namespace net`
 
 ## Programming Sense of Taste
 
