@@ -1,48 +1,105 @@
 #include <ncurses.h>
 #include <string>
-#include <sstream>
+#include <vector>
+#include <mutex>
+#include <thread>
+#include <chrono>
+#include <atomic>
 
-void print_multiline(WINDOW* win, const std::string& text, int start_y, int start_x) {
-    std::istringstream stream(text);
-    std::string line;
-    int y = start_y;
+// Global message buffer and synchronization
+std::vector<std::string> messages;
+std::mutex msg_mutex;
+std::atomic<bool> running(true);
 
-    while (std::getline(stream, line)) {
-        mvwprintw(win, y++, start_x, "%s", line.c_str());
+// Constants
+const int input_height = 3;
+
+void dummy_receiver() {
+    int count = 0;
+    while (running) {
+        {
+            std::lock_guard<std::mutex> lock(msg_mutex);
+            messages.push_back("Server: message " + std::to_string(count++));
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(2));
     }
 }
 
-int main() {
+void ui_loop() {
     initscr();
     cbreak();
     noecho();
     keypad(stdscr, TRUE);
+    curs_set(1);
 
-    int height = 10;
-    int width = COLS;
-    int input_height = 3;
+    int height, width;
+    getmaxyx(stdscr, height, width);
 
-    // Create display window (top)
-    WINDOW* display_win = newwin(height, width, 0, 0);
-    box(display_win, 0, 0);
-    mvwprintw(display_win, 1, 1, "Display Window:");
-    std::string message = "line1\nline2\nline3\nline4";
-    print_multiline(display_win, message, 2, 2);  // start printing at (2, 2)
-    wrefresh(display_win);
+    int chat_height = height - input_height;
 
-    // Create input window (bottom)
-    WINDOW* input_win = newwin(input_height, width, height, 0);
-    box(input_win, 0, 0);
-    mvwprintw(input_win, 1, 1, "Input: ");
-    wrefresh(input_win);
+    WINDOW* chat_win = newwin(chat_height, width, 0, 0);
+    WINDOW* input_win = newwin(input_height, width, chat_height, 0);
 
-    // Wait for user input
-    char input_buf[256];
-    wgetnstr(input_win, input_buf, sizeof(input_buf) - 1);
+    scrollok(chat_win, TRUE);
+    nodelay(input_win, TRUE);  // Make input window non-blocking
 
-    delwin(display_win);
+    std::string input_line;
+
+    while (running) {
+        // --- Draw chat window ---
+        werase(chat_win);
+        box(chat_win, 0, 0);
+        {
+            std::lock_guard<std::mutex> lock(msg_mutex);
+            int start_line = 1;
+            int max_lines = chat_height - 2;
+            int total_msgs = messages.size();
+            int first_msg = std::max(0, total_msgs - max_lines);
+            for (int i = first_msg; i < total_msgs; ++i) {
+                mvwprintw(chat_win, start_line++, 2, "%s", messages[i].c_str());
+            }
+        }
+        wrefresh(chat_win);
+
+        // --- Draw input window ---
+        werase(input_win);
+        box(input_win, 0, 0);
+        mvwprintw(input_win, 1, 2, "You: %s", input_line.c_str());
+        wrefresh(input_win);
+
+        // --- Handle user input ---
+        int ch = wgetch(input_win);
+        if (ch != ERR) {
+            if (ch == '\n') {
+                if (input_line == "/quit") {
+                    running = false;
+                    break;
+                }
+                std::lock_guard<std::mutex> lock(msg_mutex);
+                messages.push_back("You: " + input_line);
+                input_line.clear();
+            } else if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
+                if (!input_line.empty()) input_line.pop_back();
+            } else if (isprint(ch)) {
+                input_line.push_back(ch);
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    delwin(chat_win);
     delwin(input_win);
     endwin();
+}
+
+int main() {
+    std::thread recv_thread(dummy_receiver);
+    std::thread ui_thread(ui_loop);
+
+    ui_thread.join();
+    running = false;
+    recv_thread.join();
 
     return 0;
 }

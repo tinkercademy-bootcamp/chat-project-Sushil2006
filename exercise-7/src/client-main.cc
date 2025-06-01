@@ -58,6 +58,10 @@ int main(int argc, char *argv[]) {
   std::string username = read_args(argc, argv);
   tt::chat::client::Client client{kPort, kServerAddress};
 
+
+
+  // ncurses screen initialization
+  
   while(true){
     std::cout << "Enter message:";
     std::string message;
