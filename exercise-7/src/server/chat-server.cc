@@ -88,9 +88,8 @@ void tt::chat::server::Server::handle_connections() {
         } 
       }
       else{
-        // some event on the client's side
+        // read operation
         if(events[i].events & EPOLLIN){
-          // read operation
           char buffer[1024];
           ssize_t count = recv(fd, buffer, sizeof(buffer), 0);
           
@@ -149,12 +148,27 @@ void tt::chat::server::Server::handle_connections() {
             }
           }
         }
+
+        // write operation
+        if(events[i].events & EPOLLOUT){
+          ClientData* curr_client = static_cast<ClientData*>(events[i].data.ptr);
+          if(!curr_client->send_buffer.empty()){
+            ssize_t sent_count = send(fd, curr_client->send_buffer.c_str(), curr_client->send_buffer.size(), 0);
+            check_error(sent_count < 0, "server to client send error\n");
+            curr_client->send_buffer.erase(0,sent_count);
+          }
+
+          if(curr_client->send_buffer.empty()){
+            // no more data to send, so disable EPOLLOUT by setting to read only mode
+            epoll_event client_ev;
+            client_ev.events = EPOLLIN;
+            client_ev.data.fd = fd;
+            client_ev.data.ptr = static_cast<void*>(curr_client);
+            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &client_ev);
+          }
+        }
       }
     }
-
-    int accepted_socket = accept(socket_, (sockaddr *)&address_, &address_size);
-    check_error(accepted_socket < 0, "Accept error n ");
-    handle_accept(accepted_socket);
   }
 }
 
