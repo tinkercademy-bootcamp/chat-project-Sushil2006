@@ -9,6 +9,10 @@ tt::chat::client::Client::Client(int port,
   connect_to_server(socket_, address);
 }
 
+int tt::chat::client::Client::get_socket_fd(){
+  return socket_;
+}
+
 std::string tt::chat::client::Client::send_and_receive_message(
     const std::string &message) {
   using namespace tt::chat;

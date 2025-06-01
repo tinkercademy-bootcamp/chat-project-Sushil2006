@@ -10,6 +10,7 @@ public:
   Client(int port, const std::string &server_address);
   std::string send_and_receive_message(const std::string &message);
   ~Client();
+  int get_socket_fd();
 
 private:
   int socket_;

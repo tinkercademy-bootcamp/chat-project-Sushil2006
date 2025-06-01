@@ -54,7 +54,7 @@ void tt::chat::server::Server::handle_connections() {
 
     // process the ready_count events that are ready to be handled
     for(int i = 0; i < ready_count; ++i){
-      int fd = events[i].data.fd; // get fd of event
+      int fd = static_cast<ClientData*>(events[i].data.ptr)->fd; // get fd of event
       if(fd == socket_){
         // there is at least one incoming connection to server
         // accept all of them, till possible
@@ -80,11 +80,10 @@ void tt::chat::server::Server::handle_connections() {
           epoll_event client_ev{};
           client_ev.events = EPOLLIN; // event type: read
           client_ev.data.ptr = static_cast<void*>(client_ptr); // store pointer to client object, so that more data about client can be stored
-          client_ev.data.fd = client_fd; // store fd of client
           int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
           
           // acknowledge new client connected
-          std::cout << "New client connected\n" << std::endl;
+          std::cout << "New client connected " << " " << client_fd << std::endl;
         } 
       }
       else{
@@ -110,7 +109,6 @@ void tt::chat::server::Server::handle_connections() {
               // update client's epoll event to write
               epoll_event client_ev{};
               client_ev.events = EPOLLIN | EPOLLOUT;
-              client_ev.data.fd = client_fd;
               client_ev.data.ptr = static_cast<void*>(client_ptr);
 
               // modify status in epoll_fd list to read and write
@@ -126,21 +124,18 @@ void tt::chat::server::Server::handle_connections() {
           else{
             // send client's message to everybody
             ClientData* curr_client_ptr = fd_to_client_map[fd];
-            std::string message = "[" + curr_client_ptr->username + "]: " + (std::string) buffer + "\n";
+            std::string message = "[" + curr_client_ptr->username + "]: " + std::string(buffer, buffer+count) + "\n";
             std::cout << "Server received:\n";
             std::cout << message;
 
             // send message to everyone
             for(auto &[client_fd, client_ptr] : fd_to_client_map){
-              if(client_fd == fd) continue;
-
-              // send acknowledgement that guy is leaving by updating client's buffer
+              // send message to all of them by updating client's buffer
               client_ptr->send_buffer += message;
 
               // update client's epoll event to write
               epoll_event client_ev{};
               client_ev.events = EPOLLIN | EPOLLOUT;
-              client_ev.data.fd = client_fd;
               client_ev.data.ptr = static_cast<void*>(client_ptr);
 
               // modify status in epoll_fd list to read and write
@@ -154,6 +149,14 @@ void tt::chat::server::Server::handle_connections() {
           ClientData* curr_client = static_cast<ClientData*>(events[i].data.ptr);
           if(!curr_client->send_buffer.empty()){
             ssize_t sent_count = send(fd, curr_client->send_buffer.c_str(), curr_client->send_buffer.size(), 0);
+            
+            // std::cout << "=====DEBUG=====" << std::endl;
+            // std::cout << fd << std::endl;
+            // std::cout << curr_client->send_buffer << std::endl;
+            // std::cout << sent_count << std::endl;
+            // std::cout << errno << std::endl;
+            // std::cout << "===============" << std::endl;
+
             check_error(sent_count < 0, "server to client send error\n");
             curr_client->send_buffer.erase(0,sent_count);
           }
@@ -162,7 +165,6 @@ void tt::chat::server::Server::handle_connections() {
             // no more data to send, so disable EPOLLOUT by setting to read only mode
             epoll_event client_ev;
             client_ev.events = EPOLLIN;
-            client_ev.data.fd = fd;
             client_ev.data.ptr = static_cast<void*>(curr_client);
             epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &client_ev);
           }
@@ -217,7 +219,10 @@ void tt::chat::server::Server::epoll_init(){
   // event to check for incoming connection requests to server socket
   epoll_event ev{};
   ev.events = EPOLLIN;
-  ev.data.fd = socket_;
+
+  // NEED TO CLEAN THIS UP
+  ClientData* curr_ptr = new ClientData(socket_);
+  ev.data.ptr = curr_ptr;
 
   // add the event to the list maintained by epoll_fd
   int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_, &ev);
