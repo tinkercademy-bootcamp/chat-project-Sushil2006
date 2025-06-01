@@ -20,6 +20,11 @@ tt::chat::server::Server::Server(int port)
   err_code = listen(socket_, 3);
   check_error(err_code < 0, "listen failed\n");
 
+  err_code = make_socket_non_blocking(socket_);
+  check_error(err_code < 0, "socket non blocking failed\n");
+
+  epoll_init();
+
   std::cout << "Server listening on port " << port << "\n";
 }
 
@@ -69,3 +74,18 @@ int tt::chat::server::Server::make_socket_non_blocking(int fd) {
   return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
 
+// initialize epoll instance
+void tt::chat::server::Server::epoll_init(){
+  // create epoll instance
+  epoll_fd = epoll_create1(0);
+  check_error(epoll_fd < 0, "epoll init failed\n");
+
+  // event to check for incoming connection requests to server socket
+  epoll_event ev{};
+  ev.events = EPOLLIN;
+  ev.data.fd = socket_;
+
+  // add the event to the list maintained by epoll_fd
+  int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_, &ev);
+  check_error(err_code < 0, "add server_fd to epoll_fd failed\n");
+}
