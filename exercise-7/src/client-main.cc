@@ -28,11 +28,16 @@ int main(int argc, char *argv[]) {
   const int kPort = 8080;
   const std::string kServerAddress = "127.0.0.1";
 
-  std::string message = read_args(argc, argv);
-
+  std::string username = read_args(argc, argv);
   tt::chat::client::Client client{kPort, kServerAddress};
 
-  std::string response = client.send_and_receive_message(message);
+  while(true){
+    std::cout << "Enter message:";
+    std::string message;
+    std::cin >> message;
+
+    std::string response = client.send_and_receive_message(message);
+  }
 
   return 0;
 }
