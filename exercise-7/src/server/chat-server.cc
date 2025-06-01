@@ -31,11 +31,47 @@ tt::chat::server::Server::Server(int port)
 tt::chat::server::Server::~Server() { close(socket_); }
 
 void tt::chat::server::Server::handle_connections() {
+  using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
 
   while (true) {
+    int ready_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
+    check_error(ready_count < 0, "epoll wait failed\n");
+
+    // process the ready_count events that are ready to be handled
+    for(int i = 0; i < ready_count; ++i){
+      int fd = events[i].data.fd; // get fd of event
+      if(fd == socket_){
+        // there is at least one incoming connection to server
+        // accept all of them, till possible
+        while(true){
+          // accepting a client connection
+          sockaddr_in client_addr{};
+          socklen_t client_len = sizeof(client_addr);
+          int client_fd = accept(socket_, (sockaddr*)&client_addr, &client_len);
+
+          if(client_fd == -1){
+            // no more pending clients to be accepted
+            break;
+          }
+          
+          // make client socket non-blocking
+          make_socket_non_blocking(client_fd);
+
+          // add "read from client" event to epoll_fd
+          epoll_event client_ev{};
+          client_ev.events = EPOLLIN;
+          client_ev.data.fd = client_fd;
+          int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
+          
+          // acknowledge new client connected
+          std::cout << "New client connected\n" << std::endl;
+        } 
+      }
+    }
+
     int accepted_socket = accept(socket_, (sockaddr *)&address_, &address_size);
-    tt::chat::check_error(accepted_socket < 0, "Accept error n ");
+    check_error(accepted_socket < 0, "Accept error n ");
     handle_accept(accepted_socket);
   }
 }
@@ -76,6 +112,8 @@ int tt::chat::server::Server::make_socket_non_blocking(int fd) {
 
 // initialize epoll instance
 void tt::chat::server::Server::epoll_init(){
+  using namespace tt::chat;
+
   // create epoll instance
   epoll_fd = epoll_create1(0);
   check_error(epoll_fd < 0, "epoll init failed\n");
