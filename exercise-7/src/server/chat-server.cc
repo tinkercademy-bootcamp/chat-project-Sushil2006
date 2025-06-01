@@ -5,6 +5,16 @@
 #include "../net/chat-sockets.h"
 #include "../utils.h"
 #include "chat-server.h"
+#include <map>
+
+struct ClientData{
+  int fd = -1; // client's fd
+  std::string username = "";
+  ClientData(int fd_){
+    fd = fd_;
+    username = "Guy " + std::to_string(fd);
+  }
+};
 
 tt::chat::server::Server::Server(int port)
     : socket_(tt::chat::net::create_socket()),
@@ -34,6 +44,9 @@ void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
 
+  // map from client fd to client object
+  std::map<int, ClientData*> fd_to_client_map;
+  
   while (true) {
     int ready_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
     check_error(ready_count < 0, "epoll wait failed\n");
@@ -58,15 +71,47 @@ void tt::chat::server::Server::handle_connections() {
           // make client socket non-blocking
           make_socket_non_blocking(client_fd);
 
+          // create new client object
+          ClientData* client_ptr = new ClientData(client_fd);
+          fd_to_client_map[client_fd] = client_ptr;
+
           // add "read from client" event to epoll_fd
           epoll_event client_ev{};
-          client_ev.events = EPOLLIN;
-          client_ev.data.fd = client_fd;
+          client_ev.events = EPOLLIN; // event type: read
+          client_ev.data.ptr = static_cast<void*>(client_ptr); // store pointer to client object, so that more data about client can be stored
+          client_ev.data.fd = client_fd; // store fd of client
           int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
           
           // acknowledge new client connected
           std::cout << "New client connected\n" << std::endl;
         } 
+      }
+      else{
+        // some event on the client's side
+        if(events[i].events & EPOLLIN){
+          // read operation
+          char buffer[1024];
+          ssize_t count = recv(fd, buffer, sizeof(buffer), 0);
+          
+          if(count <= 0){
+            // client disconnected
+
+            // extract pointer to client
+            ClientData* del_client_ptr = fd_to_client_map[fd];
+            std::string message = "User " + del_client_ptr->username + " has left the channel";
+
+            // send acknowledgement to everyone
+            for(auto &[client_fd, client_ptr] : fd_to_client_map){
+              if(client_fd != fd){
+                // send acknowledgement that guy is leaving
+                
+              }
+            }
+          }
+          else{
+            // send client's message to everybody
+          }
+        }
       }
     }
 
