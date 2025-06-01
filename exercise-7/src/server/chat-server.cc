@@ -9,7 +9,8 @@
 
 struct ClientData{
   int fd = -1; // client's fd
-  std::string username = "";
+  std::string username = ""; // client's username
+  std::string send_buffer = ""; // buffer of the message that needs to be sent to the client
   ClientData(int fd_){
     fd = fd_;
     username = "Guy " + std::to_string(fd);
@@ -98,18 +99,54 @@ void tt::chat::server::Server::handle_connections() {
 
             // extract pointer to client
             ClientData* del_client_ptr = fd_to_client_map[fd];
-            std::string message = "User " + del_client_ptr->username + " has left the channel";
+            std::string message = "User " + del_client_ptr->username + " has left the channel\n";
 
             // send acknowledgement to everyone
             for(auto &[client_fd, client_ptr] : fd_to_client_map){
-              if(client_fd != fd){
-                // send acknowledgement that guy is leaving
-                
-              }
+              if(client_fd == fd) continue;
+
+              // send acknowledgement that guy is leaving by updating client's buffer
+              client_ptr->send_buffer += message;
+
+              // update client's epoll event to write
+              epoll_event client_ev{};
+              client_ev.events = EPOLLIN | EPOLLOUT;
+              client_ev.data.fd = client_fd;
+              client_ev.data.ptr = static_cast<void*>(client_ptr);
+
+              // modify status in epoll_fd list to read and write
+              epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_ev);
             }
+
+            // properly clean up the client
+            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr); // remove client from epoll_fd
+            delete del_client_ptr; // delete client's ptr
+            fd_to_client_map.erase(fd); // remove him from the map
+            close(fd); // close his socket
           }
           else{
             // send client's message to everybody
+            ClientData* curr_client_ptr = fd_to_client_map[fd];
+            std::string message = "[" + curr_client_ptr->username + "]: " + (std::string) buffer + "\n";
+            std::cout << "Server received:\n";
+            std::cout << message;
+
+            // send message to everyone
+            for(auto &[client_fd, client_ptr] : fd_to_client_map){
+              if(client_fd == fd) continue;
+
+              // send acknowledgement that guy is leaving by updating client's buffer
+              client_ptr->send_buffer += message;
+
+              // update client's epoll event to write
+              epoll_event client_ev{};
+              client_ev.events = EPOLLIN | EPOLLOUT;
+              client_ev.data.fd = client_fd;
+              client_ev.data.ptr = static_cast<void*>(client_ptr);
+
+              // modify status in epoll_fd list to read and write
+              epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_ev);
+            }
           }
         }
       }
