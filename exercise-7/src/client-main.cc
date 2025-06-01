@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
+#include <mutex>
 
 #include "client/chat-client.h"
 
@@ -23,6 +25,31 @@ std::string read_args(int argc, char *argv[]) {
   return message;
 }
 } // namespace
+
+
+
+std::vector<std::string> messages;
+std::mutex mtx;
+
+void receiver_thread(int sock_fd){
+  char buffer[1024];
+  while(true){
+    ssize_t bytes_count = recv(sock_fd, buffer, sizeof(buffer), 0);
+    if(bytes_count <= 0) break;
+    std::lock_guard<std::mutex> lock(mtx);
+
+    for(int i = 0; i < bytes_count; ++i){
+      char ch = buffer[i];
+      if(messages.empty()) messages.push_back("");
+      if(ch == '\n'){
+        messages.push_back("");
+      }
+      else{
+        messages.back().push_back(ch);
+      }
+    }
+  }
+}
 
 int main(int argc, char *argv[]) {
   const int kPort = 8080;
