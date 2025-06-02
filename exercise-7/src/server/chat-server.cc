@@ -42,7 +42,7 @@ tt::chat::server::Server::Server(int port)
 
 tt::chat::server::Server::~Server() { close(socket_); }
 
-void tt::chat::server::Server::send_message(ClientData* client_ptr, std::string &message){
+void tt::chat::server::Server::send_message(ClientData* client_ptr, std::string message){
   client_ptr->send_buffer += message;
 
   // update client's epoll event to write
@@ -145,23 +145,31 @@ void tt::chat::server::Server::handle_connections() {
           }
           else{
             std::string curr_client_message = std::string(buffer, buffer+count);
-            std::string command = "";
+            std::string command = "", actual_message = "";
             std::string message = "";
             ClientData* curr_client_ptr = fd_to_client_map[fd];
-            bool send_to_all = false; // denotes whether or not to send message to all guys in channel
-
+            
             if(curr_client_message[0] == '/'){
               // some command is being sent
+              bool space_came = false;
+
               for(auto& ch : curr_client_message){
-                if(ch == ' ') break;
-                command.push_back(ch);
+                if(space_came){
+                  actual_message.push_back(ch);
+                }
+                else if(ch == ' '){
+                  space_came = true;
+                }
+                else{
+                  command.push_back(ch);
+                }
               }
 
               if(command == "/username"){
                 if(curr_client_ptr->username.empty()){
-                  curr_client_ptr->username = "[" + std::string(curr_client_message.begin()+command.size()+1,curr_client_message.end()) + "]";
+                  curr_client_ptr->username = "[" + actual_message + "]";
                   message = "[SERVER]: User " + curr_client_ptr->username + " has joined " + curr_client_ptr->channel + "\n";
-                  send_to_all = true;
+                  send_message_to_all_in_channel(curr_client_ptr, message);
                 }
                 else{
                   message = "[SERVER]: Can't change username\n";
@@ -170,7 +178,10 @@ void tt::chat::server::Server::handle_connections() {
               }
               else if(command == "/create"){
                 // channel creation
-                
+                if(actual_message.empty()){
+                  send_message(curr_client_ptr, "Channel name can't be empty\n");
+                }
+                // send_message()
               }
               else{
                 // channel switch
@@ -179,16 +190,11 @@ void tt::chat::server::Server::handle_connections() {
             }
             else{
               message = curr_client_ptr->username + ": " + curr_client_message + "\n";
-              send_to_all = true;
+              send_message_to_all_in_channel(curr_client_ptr, message);
             }
 
             std::cout << "Server received:\n";
             std::cout << message;
-
-            // send message to everyone
-            if(send_to_all){
-              send_message_to_all_in_channel(curr_client_ptr, message);
-            }
           }
         }
 
