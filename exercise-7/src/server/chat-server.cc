@@ -7,7 +7,7 @@
 #include "chat-server.h"
 #include <map>
 
-struct ClientData{
+struct tt::chat::server::ClientData{
   int fd = -1; // client's fd
   std::string username = ""; // client's username
   std::string send_buffer = ""; // buffer of the message that needs to be sent to the client
@@ -39,6 +39,18 @@ tt::chat::server::Server::Server(int port)
 }
 
 tt::chat::server::Server::~Server() { close(socket_); }
+
+void tt::chat::server::Server::send_message(ClientData* client_ptr, std::string &message){
+  client_ptr->send_buffer += message;
+
+  // update client's epoll event to write
+  epoll_event client_ev{};
+  client_ev.events = EPOLLIN | EPOLLOUT;
+  client_ev.data.ptr = static_cast<void*>(client_ptr);
+
+  // modify status in epoll_fd list to read and write
+  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_ptr->fd, &client_ev);
+}
 
 void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
@@ -150,15 +162,7 @@ void tt::chat::server::Server::handle_connections() {
             // send message to everyone
             for(auto &[client_fd, client_ptr] : fd_to_client_map){
               // send message to all of them by updating client's buffer
-              client_ptr->send_buffer += message;
-
-              // update client's epoll event to write
-              epoll_event client_ev{};
-              client_ev.events = EPOLLIN | EPOLLOUT;
-              client_ev.data.ptr = static_cast<void*>(client_ptr);
-
-              // modify status in epoll_fd list to read and write
-              epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_fd, &client_ev);
+              send_message(client_ptr, message);
             }
           }
         }

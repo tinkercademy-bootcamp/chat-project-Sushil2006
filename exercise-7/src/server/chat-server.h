@@ -4,8 +4,11 @@
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <fcntl.h>
+#include <string>
 
 namespace tt::chat::server {
+
+struct ClientData;
 
 class Server {
 public:
@@ -27,6 +30,7 @@ private:
   static void set_socket_options(int sock, int opt);
   int make_socket_non_blocking(int fd);
   void epoll_init();
+  void send_message(ClientData* client_ptr, std::string &message);
 };
 } // namespace tt::chat::server
 
