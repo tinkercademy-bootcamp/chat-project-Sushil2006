@@ -5,6 +5,7 @@
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include <string>
+#include <map>
 
 namespace tt::chat::server {
 
@@ -21,6 +22,9 @@ private:
   sockaddr_in address_;
   int epoll_fd;
 
+  // map from client fd to client object
+  std::map<int, ClientData*> fd_to_client_map;
+  
   static constexpr int MAX_EVENTS = 10;
   static constexpr int kBufferSize = 1024;
 
@@ -31,6 +35,7 @@ private:
   int make_socket_non_blocking(int fd);
   void epoll_init();
   void send_message(ClientData* client_ptr, std::string &message);
+  void send_message_to_all_in_channel(ClientData* client_ptr, std::string &message);
 };
 } // namespace tt::chat::server
 

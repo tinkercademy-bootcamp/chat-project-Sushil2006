@@ -11,8 +11,10 @@ struct tt::chat::server::ClientData{
   int fd = -1; // client's fd
   std::string username = ""; // client's username
   std::string send_buffer = ""; // buffer of the message that needs to be sent to the client
+  std::string channel = "";
   ClientData(int fd_){
     fd = fd_;
+    channel = "#general";
   }
 };
 
@@ -52,13 +54,22 @@ void tt::chat::server::Server::send_message(ClientData* client_ptr, std::string 
   epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_ptr->fd, &client_ev);
 }
 
+void tt::chat::server::Server::send_message_to_all_in_channel(ClientData* client_ptr, std::string &message){
+  for(auto &[client_fd, client_ptr] : fd_to_client_map){
+    // send message to all of them by updating client's buffer
+    if(client_ptr->channel == client_ptr->channel){
+      send_message(client_ptr, message);
+    }
+  }
+}
+
 void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
 
-  // map from client fd to client object
-  std::map<int, ClientData*> fd_to_client_map;
-  
+  // map for each channel name to #of users in channel
+  std::map<std::string, int> channel_map;
+
   while (true) {
     int ready_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
     check_error(ready_count < 0, "epoll wait failed\n");
@@ -108,7 +119,7 @@ void tt::chat::server::Server::handle_connections() {
 
             // extract pointer to client
             ClientData* del_client_ptr = fd_to_client_map[fd];
-            std::string message = "[SERVER]: User " + del_client_ptr->username + " has left the channel\n";
+            std::string message = "[SERVER]: User " + del_client_ptr->username + " has left " + del_client_ptr->channel + "\n";
 
             // send acknowledgement to everyone
             for(auto &[client_fd, client_ptr] : fd_to_client_map){
@@ -149,13 +160,21 @@ void tt::chat::server::Server::handle_connections() {
               if(command == "/username"){
                 if(curr_client_ptr->username.empty()){
                   curr_client_ptr->username = "[" + std::string(curr_client_message.begin()+command.size()+1,curr_client_message.end()) + "]";
-                  message = "[SERVER]: User " + curr_client_ptr->username + " has joined the channel\n";
+                  message = "[SERVER]: User " + curr_client_ptr->username + " has joined " + curr_client_ptr->channel + "\n";
                   send_to_all = true;
                 }
                 else{
                   message = "[SERVER]: Can't change username\n";
                   send_message(curr_client_ptr, message);
                 }
+              }
+              else if(command == "/create"){
+                // channel creation
+                
+              }
+              else{
+                // channel switch
+                
               }
             }
             else{
@@ -168,10 +187,7 @@ void tt::chat::server::Server::handle_connections() {
 
             // send message to everyone
             if(send_to_all){
-              for(auto &[client_fd, client_ptr] : fd_to_client_map){
-                // send message to all of them by updating client's buffer
-                send_message(client_ptr, message);
-              }
+              send_message_to_all_in_channel(curr_client_ptr, message);
             }
           }
         }
