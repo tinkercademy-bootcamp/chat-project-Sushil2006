@@ -9,6 +9,7 @@ class Client {
 public:
   Client(int port, const std::string &server_address);
   std::string send_and_receive_message(const std::string &message);
+  void set_username(const std::string &username);
   ~Client();
   int get_socket_fd();
 

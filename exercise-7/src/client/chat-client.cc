@@ -33,6 +33,12 @@ std::string tt::chat::client::Client::send_and_receive_message(
   }
 }
 
+void tt::chat::client::Client::set_username(const std::string &username) {
+  // Send the message to the server
+  std::string message = "/username " + username;
+  send(socket_, message.c_str(), message.size(), 0);
+}
+
 tt::chat::client::Client::~Client() { close(socket_); }
 
 sockaddr_in tt::chat::client::Client::create_server_address(

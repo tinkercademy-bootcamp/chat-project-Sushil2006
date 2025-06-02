@@ -13,7 +13,6 @@ struct ClientData{
   std::string send_buffer = ""; // buffer of the message that needs to be sent to the client
   ClientData(int fd_){
     fd = fd_;
-    username = "Guy " + std::to_string(fd);
   }
 };
 
@@ -83,7 +82,7 @@ void tt::chat::server::Server::handle_connections() {
           int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
           
           // acknowledge new client connected
-          std::cout << "New client connected " << " " << client_fd << std::endl;
+          // std::cout << "New client connected " << " " << client_fd << std::endl;
         } 
       }
       else{
@@ -97,7 +96,7 @@ void tt::chat::server::Server::handle_connections() {
 
             // extract pointer to client
             ClientData* del_client_ptr = fd_to_client_map[fd];
-            std::string message = "User " + del_client_ptr->username + " has left the channel\n";
+            std::string message = "[SERVER]: User " + del_client_ptr->username + " has left the channel\n";
 
             // send acknowledgement to everyone
             for(auto &[client_fd, client_ptr] : fd_to_client_map){
@@ -123,8 +122,28 @@ void tt::chat::server::Server::handle_connections() {
           }
           else{
             // send client's message to everybody
+            std::string curr_client_message = std::string(buffer, buffer+count);
+            std::string command = "";
+            std::string message = "";
             ClientData* curr_client_ptr = fd_to_client_map[fd];
-            std::string message = "[" + curr_client_ptr->username + "]: " + std::string(buffer, buffer+count) + "\n";
+
+            if(curr_client_message[0] == '/'){
+              // some command is being sent
+              for(auto& ch : curr_client_message){
+                if(ch == ' ') break;
+                command.push_back(ch);
+              }
+
+              if(command == "/username"){
+                curr_client_ptr->username = "[" + std::string(curr_client_message.begin()+command.size()+1,curr_client_message.end()) + "]";
+              }
+
+              message = "[SERVER]: User " + curr_client_ptr->username + " has joined the channel\n";
+            }
+            else{
+              message = curr_client_ptr->username + ": " + curr_client_message + "\n";
+            }
+
             std::cout << "Server received:\n";
             std::cout << message;
 

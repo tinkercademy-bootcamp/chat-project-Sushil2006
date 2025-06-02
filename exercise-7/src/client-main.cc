@@ -21,7 +21,7 @@ std::string read_args(int argc, char *argv[]) {
   using namespace tt::chat;
   std::string message = "Hello from client";
   if (argc == 1) {
-    std::cout << "Usage: " << argv[0] << " <message>\n";
+    std::cout << "Usage: " << argv[0] << " <username>\n";
     exit(EXIT_FAILURE);
   }
   if (argc > 1) {
@@ -133,6 +133,7 @@ int main(int argc, char *argv[]) {
 
   std::string username = read_args(argc, argv);
   tt::chat::client::Client client{kPort, kServerAddress};
+  client.set_username(username);
 
   std::thread recv_thread(receiver_thread, client.get_socket_fd());
   std::thread ui_thread(ui_loop, client.get_socket_fd());
