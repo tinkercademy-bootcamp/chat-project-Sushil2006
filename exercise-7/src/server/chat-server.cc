@@ -133,11 +133,11 @@ void tt::chat::server::Server::handle_connections() {
             close(fd); // close his socket
           }
           else{
-            // send client's message to everybody
             std::string curr_client_message = std::string(buffer, buffer+count);
             std::string command = "";
             std::string message = "";
             ClientData* curr_client_ptr = fd_to_client_map[fd];
+            bool send_to_all = false; // denotes whether or not to send message to all guys in channel
 
             if(curr_client_message[0] == '/'){
               // some command is being sent
@@ -147,22 +147,31 @@ void tt::chat::server::Server::handle_connections() {
               }
 
               if(command == "/username"){
-                curr_client_ptr->username = "[" + std::string(curr_client_message.begin()+command.size()+1,curr_client_message.end()) + "]";
+                if(curr_client_ptr->username.empty()){
+                  curr_client_ptr->username = "[" + std::string(curr_client_message.begin()+command.size()+1,curr_client_message.end()) + "]";
+                  message = "[SERVER]: User " + curr_client_ptr->username + " has joined the channel\n";
+                  send_to_all = true;
+                }
+                else{
+                  message = "[SERVER]: Can't change username\n";
+                  send_message(curr_client_ptr, message);
+                }
               }
-
-              message = "[SERVER]: User " + curr_client_ptr->username + " has joined the channel\n";
             }
             else{
               message = curr_client_ptr->username + ": " + curr_client_message + "\n";
+              send_to_all = true;
             }
 
             std::cout << "Server received:\n";
             std::cout << message;
 
             // send message to everyone
-            for(auto &[client_fd, client_ptr] : fd_to_client_map){
-              // send message to all of them by updating client's buffer
-              send_message(client_ptr, message);
+            if(send_to_all){
+              for(auto &[client_fd, client_ptr] : fd_to_client_map){
+                // send message to all of them by updating client's buffer
+                send_message(client_ptr, message);
+              }
             }
           }
         }
