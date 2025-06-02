@@ -55,10 +55,10 @@ void tt::chat::server::Server::send_message(ClientData* client_ptr, std::string 
 }
 
 void tt::chat::server::Server::send_message_to_all_in_channel(ClientData* client_ptr, std::string &message){
-  for(auto &[client_fd, client_ptr] : fd_to_client_map){
+  for(auto &[mp_client_fd, mp_client_ptr] : fd_to_client_map){
     // send message to all of them by updating client's buffer
-    if(client_ptr->channel == client_ptr->channel){
-      send_message(client_ptr, message);
+    if(mp_client_ptr->channel == client_ptr->channel){
+      send_message(mp_client_ptr, message);
     }
   }
 }
@@ -197,7 +197,23 @@ void tt::chat::server::Server::handle_connections() {
               }
               else{
                 // channel switch
-                
+                if(!channel_map.count(actual_message)){
+                  message = "[SERVER]: Channel " + actual_message + " doesn't exist\n";
+                  send_message(curr_client_ptr, message);
+                }
+                else{
+                  message = "[SERVER]: User " + curr_client_ptr->username + " has left " + curr_client_ptr->channel + "\n";
+                  send_message_to_all_in_channel(curr_client_ptr, message);
+
+                  channel_map[curr_client_ptr->channel]--;
+                  channel_map[actual_message]++;
+
+                  send_message(curr_client_ptr, "/clear_history\n"); // command to clear history, sent by server to client
+
+                  curr_client_ptr->channel = actual_message;
+                  message = "[SERVER]: User " + curr_client_ptr->username + " has joined " + curr_client_ptr->channel + "\n";
+                  send_message_to_all_in_channel(curr_client_ptr, message);
+                }
               }
             }
             else{
