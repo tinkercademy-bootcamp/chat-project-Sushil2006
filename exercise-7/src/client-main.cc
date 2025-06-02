@@ -64,70 +64,70 @@ void receiver_thread(int sock_fd){
 }
 
 void ui_loop(int sock_fd) {
-    initscr();
-    cbreak();
-    noecho();
-    keypad(stdscr, TRUE);
-    curs_set(1);
+  initscr();
+  cbreak();
+  noecho();
+  keypad(stdscr, TRUE);
+  curs_set(1);
 
-    int height, width;
-    getmaxyx(stdscr, height, width);
+  int height, width;
+  getmaxyx(stdscr, height, width);
 
-    int chat_height = height - input_height;
+  int chat_height = height - input_height;
 
-    WINDOW* chat_win = newwin(chat_height, width, 0, 0);
-    WINDOW* input_win = newwin(input_height, width, chat_height, 0);
+  WINDOW* chat_win = newwin(chat_height, width, 0, 0);
+  WINDOW* input_win = newwin(input_height, width, chat_height, 0);
 
-    scrollok(chat_win, TRUE);
-    nodelay(input_win, TRUE);  // Make input window non-blocking
+  scrollok(chat_win, TRUE);
+  nodelay(input_win, TRUE);  // Make input window non-blocking
 
-    std::string input_line;
+  std::string input_line;
 
-    while (running) {
-        // --- Draw chat window ---
-        werase(chat_win);
-        box(chat_win, 0, 0);
-        {
-            std::lock_guard<std::mutex> lock(msg_mutex);
-            int start_line = 1;
-            int max_lines = chat_height - 2;
-            int total_msgs = messages.size();
-            int first_msg = std::max(0, total_msgs - max_lines);
-            for (int i = first_msg; i < total_msgs; ++i) {
-                mvwprintw(chat_win, start_line++, 2, "%s", messages[i].c_str());
-            }
+  while (running) {
+      // --- Draw chat window ---
+    werase(chat_win);
+    box(chat_win, 0, 0);
+    {
+      std::lock_guard<std::mutex> lock(msg_mutex);
+      int start_line = 1;
+      int max_lines = chat_height - 2;
+      int total_msgs = messages.size();
+      int first_msg = std::max(0, total_msgs - max_lines);
+      for (int i = first_msg; i < total_msgs; ++i) {
+          mvwprintw(chat_win, start_line++, 2, "%s", messages[i].c_str());
+      }
+    }
+    wrefresh(chat_win);
+
+    // --- Draw input window ---
+    werase(input_win);
+    box(input_win, 0, 0);
+    mvwprintw(input_win, 1, 2, "You: %s", input_line.c_str());
+    wrefresh(input_win);
+
+    // --- Handle user input ---
+    int ch = wgetch(input_win);
+    if (ch != ERR) {
+      if (ch == '\n') {
+        if (input_line == "/quit") {
+          running = false;
+          break;
         }
-        wrefresh(chat_win);
-
-        // --- Draw input window ---
-        werase(input_win);
-        box(input_win, 0, 0);
-        mvwprintw(input_win, 1, 2, "You: %s", input_line.c_str());
-        wrefresh(input_win);
-
-        // --- Handle user input ---
-        int ch = wgetch(input_win);
-        if (ch != ERR) {
-            if (ch == '\n') {
-                if (input_line == "/quit") {
-                    running = false;
-                    break;
-                }
-                send(sock_fd, input_line.c_str(), input_line.size(), 0);
-                input_line.clear();
-            } else if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
-                if (!input_line.empty()) input_line.pop_back();
-            } else if (isprint(ch)) {
-                input_line.push_back(ch);
-            }
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+        send(sock_fd, input_line.c_str(), input_line.size(), 0);
+        input_line.clear();
+      } else if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
+        if (!input_line.empty()) input_line.pop_back();
+      } else if (isprint(ch)) {
+        input_line.push_back(ch);
+      }
     }
 
-    delwin(chat_win);
-    delwin(input_win);
-    endwin();
+    std::this_thread::sleep_for(std::chrono::milliseconds(25));
+  }
+
+  delwin(chat_win);
+  delwin(input_win);
+  endwin();
 }
 
 int main(int argc, char *argv[]) {

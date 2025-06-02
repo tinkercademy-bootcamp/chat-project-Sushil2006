@@ -195,10 +195,14 @@ void tt::chat::server::Server::handle_connections() {
                   channel_map[actual_message]++;
                 }
               }
-              else{
+              else if(command == "/switch"){
                 // channel switch
                 if(!channel_map.count(actual_message)){
                   message = "[SERVER]: Channel " + actual_message + " doesn't exist\n";
+                  send_message(curr_client_ptr, message);
+                }
+                else if(curr_client_ptr->channel == actual_message){
+                  message = "[SERVER]: Already in channel " + actual_message + " \n";
                   send_message(curr_client_ptr, message);
                 }
                 else{
@@ -214,6 +218,9 @@ void tt::chat::server::Server::handle_connections() {
                   message = "[SERVER]: User " + curr_client_ptr->username + " has joined " + curr_client_ptr->channel + "\n";
                   send_message_to_all_in_channel(curr_client_ptr, message);
                 }
+              }
+              else{
+                send_message(curr_client_ptr, "[SERVER]: Invalid command\n");
               }
             }
             else{
