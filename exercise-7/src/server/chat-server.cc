@@ -69,6 +69,7 @@ void tt::chat::server::Server::handle_connections() {
 
   // map for each channel name to #of users in channel
   std::map<std::string, int> channel_map;
+  channel_map["#general"] = 0;
 
   while (true) {
     int ready_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
@@ -179,9 +180,20 @@ void tt::chat::server::Server::handle_connections() {
               else if(command == "/create"){
                 // channel creation
                 if(actual_message.empty()){
-                  send_message(curr_client_ptr, "Channel name can't be empty\n");
+                  send_message(curr_client_ptr, "[SERVER]: Channel name can't be empty\n");
                 }
-                // send_message()
+                else if(actual_message[0] != '#'){ 
+                  send_message(curr_client_ptr, "[SERVER]: Channel name must begin with '#'\n");
+                }
+                else if(channel_map.count(actual_message)){
+                  message = "[SERVER]: Channel " + actual_message + " already exists\n";
+                  send_message(curr_client_ptr, message);
+                }
+                else{
+                  message = "[SERVER]: Channel " + actual_message + " created\n";
+                  send_message(curr_client_ptr, message);
+                  channel_map[actual_message]++;
+                }
               }
               else{
                 // channel switch
