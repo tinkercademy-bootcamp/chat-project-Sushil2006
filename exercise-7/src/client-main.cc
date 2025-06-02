@@ -51,6 +51,9 @@ void receiver_thread(int sock_fd){
       char ch = buffer[i];
       if(messages.empty()) messages.push_back("");
       if(ch == '\n'){
+        if(messages.back() == "/clear_history"){
+          messages.clear();
+        }
         messages.push_back("");
       }
       else{
