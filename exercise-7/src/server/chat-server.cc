@@ -5,7 +5,6 @@
 #include "../net/chat-sockets.h"
 #include "../utils.h"
 #include "chat-server.h"
-#include <map>
 
 struct tt::chat::server::ClientData{
   int fd = -1; // client's fd
@@ -29,7 +28,7 @@ tt::chat::server::Server::Server(int port)
   auto err_code = bind(socket_, (sockaddr *)&address_, sizeof(address_));
   check_error(err_code < 0, "bind failed\n");
 
-  err_code = listen(socket_, 3);
+  err_code = listen(socket_, SOMAXCONN);
   check_error(err_code < 0, "listen failed\n");
 
   err_code = make_socket_non_blocking(socket_);
