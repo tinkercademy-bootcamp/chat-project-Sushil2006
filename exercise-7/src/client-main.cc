@@ -7,13 +7,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <ncurses.h>
-#include <vector>
-#include <mutex>
-#include <thread>
-#include <chrono>
-#include <atomic>
-
 #include "client/chat-client.h"
 #include "gui/chat-gui.h"
 
