@@ -31,7 +31,6 @@ std::string read_args(int argc, char *argv[]) {
 }
 } // namespace
 
-
 // Global message buffer and synchronization
 std::vector<std::string> messages;
 std::mutex msg_mutex;
@@ -40,26 +39,30 @@ std::atomic<bool> running(true);
 // Constants
 const int input_height = 3;
 
+void update_messages(char buffer[], int bytes_count){
+  std::lock_guard<std::mutex> lock(msg_mutex);
+
+  for(int i = 0; i < bytes_count; ++i){
+    char ch = buffer[i];
+    if(messages.empty()) messages.push_back("");
+    if(ch == '\n'){
+      if(messages.back() == "/clear_history"){
+        messages.clear();
+      }
+      messages.push_back("");
+    }
+    else{
+      messages.back().push_back(ch);
+    }
+  }
+}
+
 void receiver_thread(int sock_fd){
-  char buffer[1024];
+  char buffer[256];
   while(true){
     ssize_t bytes_count = recv(sock_fd, buffer, sizeof(buffer), 0);
     if(bytes_count <= 0) break;
-    std::lock_guard<std::mutex> lock(msg_mutex);
-
-    for(int i = 0; i < bytes_count; ++i){
-      char ch = buffer[i];
-      if(messages.empty()) messages.push_back("");
-      if(ch == '\n'){
-        if(messages.back() == "/clear_history"){
-          messages.clear();
-        }
-        messages.push_back("");
-      }
-      else{
-        messages.back().push_back(ch);
-      }
-    }
+    update_messages(buffer, bytes_count);
   }
 }
 
@@ -143,16 +146,6 @@ int main(int argc, char *argv[]) {
 
   recv_thread.join();
   ui_thread.join();
-
-  // ncurses screen initialization
-  
-  // while(true){
-  //   std::cout << "Enter message:";
-  //   std::string message;
-  //   std::cin >> message;
-
-  //   std::string response = client.send_and_receive_message(message);
-  // }
 
   return 0;
 }
