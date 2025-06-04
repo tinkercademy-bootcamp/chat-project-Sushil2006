@@ -13,12 +13,12 @@
 namespace tt::chat::gui {
 class Gui {
 public:
-  Gui(int port, std::vector<std::string> &messages);
+  Gui(int port);
   void initialize_screen();
   void set_chat_height();
   void initialize_windows();
-  void ui_loop(std::vector<std::string> &messages);
-  void draw_chat_window(std::vector<std::string> &messages);
+  void ui_loop(std::vector<std::string> &messages, std::mutex &msg_mutex);
+  void draw_chat_window(std::vector<std::string> &messages, std::mutex &msg_mutex);
   void draw_input_window();
   void handle_user_input();
   ~Gui(); // TODO: NEED TO HANDLE DESTRUCTOR AND PROPER CLEANING UP OF VARIABLES

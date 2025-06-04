@@ -1,12 +1,11 @@
 #include "chat-gui.h"
 #include "../utils.h"
 
-tt::chat::gui::Gui::Gui(int port, std::vector<std::string> &messages){
+tt::chat::gui::Gui::Gui(int port){
   socket_ = port;
   initialize_screen();
   set_chat_height();
   initialize_windows();
-  ui_loop(messages);
 }
 
 void tt::chat::gui::Gui::initialize_screen(){
@@ -30,9 +29,9 @@ void tt::chat::gui::Gui::initialize_windows(){
   nodelay(input_win, TRUE);  // make input window non-blocking
 }
 
-void tt::chat::gui::Gui::ui_loop(std::vector<std::string> &messages){
+void tt::chat::gui::Gui::ui_loop(std::vector<std::string> &messages, std::mutex &msg_mutex){
   while (true) {
-    draw_chat_window(messages);
+    draw_chat_window(messages, msg_mutex);
     draw_input_window();
     handle_user_input();
 
@@ -40,15 +39,18 @@ void tt::chat::gui::Gui::ui_loop(std::vector<std::string> &messages){
   }
 }
 
-void tt::chat::gui::Gui::draw_chat_window(std::vector<std::string> &messages){
+void tt::chat::gui::Gui::draw_chat_window(std::vector<std::string> &messages, std::mutex &msg_mutex){
   werase(chat_win);
   box(chat_win, 0, 0);
-  int start_line = 1;
-  int max_lines = chat_height - 2;
-  int total_msgs = messages.size();
-  int first_msg = std::max(0, total_msgs - max_lines);
-  for (int i = first_msg; i < total_msgs; ++i) {
-      mvwprintw(chat_win, start_line++, 2, "%s", messages[i].c_str());
+  {
+    std::lock_guard<std::mutex> lock(msg_mutex);
+    int start_line = 1;
+    int max_lines = chat_height - 2;
+    int total_msgs = messages.size();
+    int first_msg = std::max(0, total_msgs - max_lines);
+    for (int i = first_msg; i < total_msgs; ++i) {
+        mvwprintw(chat_win, start_line++, 2, "%s", messages[i].c_str());
+    }
   }
   wrefresh(chat_win);
 }
