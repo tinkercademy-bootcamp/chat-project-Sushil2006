@@ -24,9 +24,12 @@ private:
 
   // map from client fd to client object
   std::map<int, ClientData*> fd_to_client_map;
+
+  // map from each channel name to #of users in channel
+  std::map<std::string, int> channel_map;
   
   static constexpr int MAX_EVENTS = 10;
-  static constexpr int kBufferSize = 1024;
+  static constexpr int kBufferSize = 256;
 
   epoll_event events[MAX_EVENTS];
 

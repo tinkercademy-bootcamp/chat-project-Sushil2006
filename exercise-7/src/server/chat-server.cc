@@ -66,10 +66,6 @@ void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
 
-  // map for each channel name to #of users in channel
-  std::map<std::string, int> channel_map;
-  channel_map["#general"] = 0;
-
   while (true) {
     int ready_count = epoll_wait(epoll_fd, events, MAX_EVENTS, -1);
     check_error(ready_count < 0, "epoll wait failed\n");
