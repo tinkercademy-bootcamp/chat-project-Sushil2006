@@ -41,7 +41,7 @@ private:
   void modify_client_status(ClientData* client_ptr, uint32_t events);
   void send_message(ClientData* client_ptr, std::string message);
   void send_message_to_all_in_channel(ClientData* client_ptr, std::string &message);
-  void disconnect_client(int fd);
+  void disconnect_client(ClientData* del_client_ptr);
   std::pair<std::string, std::string> split_command_and_message(std::string &curr_client_message);
   void handle_client_command(ClientData* curr_client_ptr, std::string &curr_client_message);
   void handle_username_command(ClientData* curr_client_ptr, std::string &username);

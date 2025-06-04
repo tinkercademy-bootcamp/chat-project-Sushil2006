@@ -100,12 +100,12 @@ void tt::chat::server::Server::accept_all_incoming_client_connections(){
   } 
 }
 
-void tt::chat::server::Server::disconnect_client(int fd){
-  ClientData* del_client_ptr = fd_to_client_map[fd];
+void tt::chat::server::Server::disconnect_client(ClientData* del_client_ptr){
   std::string message = "[SERVER]: User " + del_client_ptr->username + " has left " + del_client_ptr->channel + "\n";
   send_message_to_all_in_channel(del_client_ptr, message);
   
   // properly clean up the client
+  int fd = del_client_ptr->fd;
   epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
   channel_map[del_client_ptr->channel]--;
   fd_to_client_map.erase(fd);
@@ -222,8 +222,8 @@ void tt::chat::server::Server::handle_connections() {
 
     // process the ready_count events that are ready to be handled
     for(int i = 0; i < ready_count; ++i){
-      int fd = static_cast<ClientData*>(events[i].data.ptr)->fd; // get fd of event
-      if(fd == socket_){
+      ClientData* curr_client_ptr = static_cast<ClientData*>(events[i].data.ptr);
+      if(curr_client_ptr->fd == socket_){
         // there is at least one incoming connection to server, accept all of them
         accept_all_incoming_client_connections();
       }
@@ -231,15 +231,14 @@ void tt::chat::server::Server::handle_connections() {
         // read operation
         if(events[i].events & EPOLLIN){
           char buffer[kBufferSize];
-          ssize_t count = recv(fd, buffer, sizeof(buffer), 0);
+          ssize_t count = recv(curr_client_ptr->fd, buffer, sizeof(buffer), 0);
           
           if(count <= 0){
             // client disconnected
-            disconnect_client(fd);
+            disconnect_client(curr_client_ptr);
           }
           else{
             std::string curr_client_message = std::string(buffer, buffer+count);
-            ClientData* curr_client_ptr = fd_to_client_map[fd];
 
             // some command is being sent
             if(curr_client_message[0] == '/'){
@@ -254,12 +253,11 @@ void tt::chat::server::Server::handle_connections() {
 
         // write operation
         if(events[i].events & EPOLLOUT){
-          ClientData* curr_client = static_cast<ClientData*>(events[i].data.ptr);
-          curr_client->send_data_in_buffer();
+          curr_client_ptr->send_data_in_buffer();
 
-          if(curr_client->send_buffer.empty()){
+          if(curr_client_ptr->send_buffer.empty()){
             // no more data to send, so disable EPOLLOUT by setting to read only mode
-            modify_client_status(curr_client, EPOLLIN);
+            modify_client_status(curr_client_ptr, EPOLLIN);
           }
         }
       }
