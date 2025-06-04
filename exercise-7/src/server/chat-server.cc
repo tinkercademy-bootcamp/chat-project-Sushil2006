@@ -149,6 +149,25 @@ void tt::chat::server::Server::handle_username_command(ClientData* curr_client_p
   }
 }
 
+void tt::chat::server::Server::handle_create_channel_command(ClientData* curr_client_ptr, std::string &channel_name){
+  std::string message = "";
+  if(channel_name.empty()){
+    send_message(curr_client_ptr, "[SERVER]: Channel name can't be empty\n");
+  }
+  else if(channel_name[0] != '#'){ 
+    send_message(curr_client_ptr, "[SERVER]: Channel name must begin with '#'\n");
+  }
+  else if(channel_map.count(channel_name)){
+    message = "[SERVER]: Channel " + channel_name + " already exists\n";
+    send_message(curr_client_ptr, message);
+  }
+  else{
+    message = "[SERVER]: Channel " + channel_name + " created\n";
+    send_message(curr_client_ptr, message);
+    channel_map[channel_name]++;
+  }
+}
+
 void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
@@ -188,21 +207,7 @@ void tt::chat::server::Server::handle_connections() {
               }
               else if(command == "/create"){
                 // channel creation
-                if(actual_message.empty()){
-                  send_message(curr_client_ptr, "[SERVER]: Channel name can't be empty\n");
-                }
-                else if(actual_message[0] != '#'){ 
-                  send_message(curr_client_ptr, "[SERVER]: Channel name must begin with '#'\n");
-                }
-                else if(channel_map.count(actual_message)){
-                  message = "[SERVER]: Channel " + actual_message + " already exists\n";
-                  send_message(curr_client_ptr, message);
-                }
-                else{
-                  message = "[SERVER]: Channel " + actual_message + " created\n";
-                  send_message(curr_client_ptr, message);
-                  channel_map[actual_message]++;
-                }
+                handle_create_channel_command(curr_client_ptr, actual_message);
               }
               else if(command == "/switch"){
                 // channel switch
