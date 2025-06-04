@@ -115,6 +115,27 @@ void tt::chat::server::Server::disconnect_client(int fd){
   close(fd);
 }
 
+std::pair<std::string, std::string> tt::chat::server::Server::split_command_and_message(std::string &curr_client_message){
+  std::string command = "", actual_message = "";
+  std::string message = "";
+
+  bool space_came = false;
+
+  for(auto& ch : curr_client_message){
+    if(space_came){
+      actual_message.push_back(ch);
+    }
+    else if(ch == ' '){
+      space_came = true;
+    }
+    else{
+      command.push_back(ch);
+    }
+  }
+
+  return {command, actual_message};
+}
+
 void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
@@ -142,25 +163,12 @@ void tt::chat::server::Server::handle_connections() {
           }
           else{
             std::string curr_client_message = std::string(buffer, buffer+count);
-            std::string command = "", actual_message = "";
-            std::string message = "";
             ClientData* curr_client_ptr = fd_to_client_map[fd];
-            
-            if(curr_client_message[0] == '/'){
-              // some command is being sent
-              bool space_came = false;
 
-              for(auto& ch : curr_client_message){
-                if(space_came){
-                  actual_message.push_back(ch);
-                }
-                else if(ch == ' '){
-                  space_came = true;
-                }
-                else{
-                  command.push_back(ch);
-                }
-              }
+            // some command is being sent
+            if(curr_client_message[0] == '/'){
+              auto [command, actual_message] = split_command_and_message(curr_client_message);
+              std::string message = "";
 
               if(command == "/username"){
                 if(curr_client_ptr->username.empty()){
@@ -220,12 +228,9 @@ void tt::chat::server::Server::handle_connections() {
               }
             }
             else{
-              message = curr_client_ptr->username + ": " + curr_client_message + "\n";
+              std::string message = curr_client_ptr->username + ": " + curr_client_message + "\n";
               send_message_to_all_in_channel(curr_client_ptr, message);
             }
-
-            std::cout << "Server received:\n";
-            std::cout << message;
           }
         }
 
