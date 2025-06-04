@@ -194,6 +194,24 @@ void tt::chat::server::Server::handle_create_channel_command(ClientData* curr_cl
   }
 }
 
+void tt::chat::server::Server::handle_client_command(ClientData* curr_client_ptr, std::string &curr_client_message){
+  auto [command, actual_message] = split_command_and_message(curr_client_message);
+  std::string message = "";
+
+  if(command == "/username"){
+    handle_username_command(curr_client_ptr, actual_message);
+  }
+  else if(command == "/create"){
+    handle_create_channel_command(curr_client_ptr, actual_message);
+  }
+  else if(command == "/switch"){
+    handle_channel_switch_command(curr_client_ptr, actual_message);
+  }
+  else{
+    send_message(curr_client_ptr, "[SERVER]: Invalid command\n");
+  }
+}
+
 void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
@@ -225,21 +243,7 @@ void tt::chat::server::Server::handle_connections() {
 
             // some command is being sent
             if(curr_client_message[0] == '/'){
-              auto [command, actual_message] = split_command_and_message(curr_client_message);
-              std::string message = "";
-
-              if(command == "/username"){
-                handle_username_command(curr_client_ptr, actual_message);
-              }
-              else if(command == "/create"){
-                handle_create_channel_command(curr_client_ptr, actual_message);
-              }
-              else if(command == "/switch"){
-                handle_channel_switch_command(curr_client_ptr, actual_message);
-              }
-              else{
-                send_message(curr_client_ptr, "[SERVER]: Invalid command\n");
-              }
+              handle_client_command(curr_client_ptr, curr_client_message);
             }
             else{
               std::string message = curr_client_ptr->username + ": " + curr_client_message + "\n";
