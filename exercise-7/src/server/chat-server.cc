@@ -149,6 +149,32 @@ void tt::chat::server::Server::handle_username_command(ClientData* curr_client_p
   }
 }
 
+void tt::chat::server::Server::handle_channel_switch_command(ClientData* curr_client_ptr, std::string &channel_name){
+  std::string message = "";
+
+  if(!channel_map.count(channel_name)){
+    message = "[SERVER]: Channel " + channel_name + " doesn't exist\n";
+    send_message(curr_client_ptr, message);
+  }
+  else if(curr_client_ptr->channel == channel_name){
+    message = "[SERVER]: Already in channel " + channel_name + " \n";
+    send_message(curr_client_ptr, message);
+  }
+  else{
+    message = "[SERVER]: User " + curr_client_ptr->username + " has left " + curr_client_ptr->channel + "\n";
+    send_message_to_all_in_channel(curr_client_ptr, message);
+
+    channel_map[curr_client_ptr->channel]--;
+    channel_map[channel_name]++;
+
+    send_message(curr_client_ptr, "/clear_history\n"); // command to clear history, sent by server to client
+
+    curr_client_ptr->channel = channel_name;
+    message = "[SERVER]: User " + curr_client_ptr->username + " has joined " + curr_client_ptr->channel + "\n";
+    send_message_to_all_in_channel(curr_client_ptr, message);
+  }
+}
+
 void tt::chat::server::Server::handle_create_channel_command(ClientData* curr_client_ptr, std::string &channel_name){
   std::string message = "";
   if(channel_name.empty()){
@@ -206,32 +232,10 @@ void tt::chat::server::Server::handle_connections() {
                 handle_username_command(curr_client_ptr, actual_message);
               }
               else if(command == "/create"){
-                // channel creation
                 handle_create_channel_command(curr_client_ptr, actual_message);
               }
               else if(command == "/switch"){
-                // channel switch
-                if(!channel_map.count(actual_message)){
-                  message = "[SERVER]: Channel " + actual_message + " doesn't exist\n";
-                  send_message(curr_client_ptr, message);
-                }
-                else if(curr_client_ptr->channel == actual_message){
-                  message = "[SERVER]: Already in channel " + actual_message + " \n";
-                  send_message(curr_client_ptr, message);
-                }
-                else{
-                  message = "[SERVER]: User " + curr_client_ptr->username + " has left " + curr_client_ptr->channel + "\n";
-                  send_message_to_all_in_channel(curr_client_ptr, message);
-
-                  channel_map[curr_client_ptr->channel]--;
-                  channel_map[actual_message]++;
-
-                  send_message(curr_client_ptr, "/clear_history\n"); // command to clear history, sent by server to client
-
-                  curr_client_ptr->channel = actual_message;
-                  message = "[SERVER]: User " + curr_client_ptr->username + " has joined " + curr_client_ptr->channel + "\n";
-                  send_message_to_all_in_channel(curr_client_ptr, message);
-                }
+                handle_channel_switch_command(curr_client_ptr, actual_message);
               }
               else{
                 send_message(curr_client_ptr, "[SERVER]: Invalid command\n");

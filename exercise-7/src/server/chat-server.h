@@ -45,6 +45,7 @@ private:
   std::pair<std::string, std::string> split_command_and_message(std::string &curr_client_message);
   void handle_username_command(ClientData* curr_client_ptr, std::string &username);
   void handle_create_channel_command(ClientData* curr_client_ptr, std::string &channel_name);
+  void handle_channel_switch_command(ClientData* curr_client_ptr, std::string &channel_name);
 };
 } // namespace tt::chat::server
 
