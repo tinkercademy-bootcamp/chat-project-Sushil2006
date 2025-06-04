@@ -115,7 +115,7 @@ void tt::chat::server::Server::handle_connections() {
       else{
         // read operation
         if(events[i].events & EPOLLIN){
-          char buffer[1024];
+          char buffer[kBufferSize];
           ssize_t count = recv(fd, buffer, sizeof(buffer), 0);
           
           if(count <= 0){
