@@ -32,36 +32,6 @@ std::string read_args(int argc, char *argv[]) {
 }
 } // namespace
 
-std::vector<std::string> messages;
-std::mutex msg_mutex;
-
-void update_messages(char buffer[], int bytes_count){
-  std::lock_guard<std::mutex> lock(msg_mutex);
-
-  for(int i = 0; i < bytes_count; ++i){
-    char ch = buffer[i];
-    if(messages.empty()) messages.push_back("");
-    if(ch == '\n'){
-      if(messages.back() == "/clear_history"){
-        messages.clear();
-      }
-      messages.push_back("");
-    }
-    else{
-      messages.back().push_back(ch);
-    }
-  }
-}
-
-void receiver_thread(int sock_fd){
-  char buffer[256];
-  while(true){
-    ssize_t bytes_count = recv(sock_fd, buffer, sizeof(buffer), 0);
-    if(bytes_count <= 0) break;
-    update_messages(buffer, bytes_count);
-  }
-}
-
 int main(int argc, char *argv[]) {
   const int kPort = 8080;
   const std::string kServerAddress = "127.0.0.1";
@@ -72,7 +42,10 @@ int main(int argc, char *argv[]) {
 
   tt::chat::gui::Gui gui{client.get_socket_fd()};
 
-  std::thread recv_thread(receiver_thread, client.get_socket_fd());
+  std::vector<std::string> messages;
+  std::mutex msg_mutex;
+
+  std::thread recv_thread(&tt::chat::client::Client::receiver_thread, &client, std::ref(messages), std::ref(msg_mutex));
   std::thread ui_thread(&tt::chat::gui::Gui::ui_loop, &gui, std::ref(messages), std::ref(msg_mutex));
 
   recv_thread.join();
