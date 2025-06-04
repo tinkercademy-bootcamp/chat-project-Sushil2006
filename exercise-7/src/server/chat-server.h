@@ -38,6 +38,7 @@ private:
   int make_socket_non_blocking(int fd);
   void epoll_init();
   void accept_all_incoming_client_connections();
+  void modify_client_status(ClientData* client_ptr, uint32_t events);
   void send_message(ClientData* client_ptr, std::string message);
   void send_message_to_all_in_channel(ClientData* client_ptr, std::string &message);
 };

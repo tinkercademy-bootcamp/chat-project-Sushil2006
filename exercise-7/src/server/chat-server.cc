@@ -15,6 +15,11 @@ struct tt::chat::server::ClientData{
     fd = fd_;
     channel = "#general";
   }
+  void send_data_in_buffer(){
+    ssize_t sent_count = send(fd, send_buffer.c_str(), send_buffer.size(), 0);
+    check_error(sent_count < 0, "server to client send error\n");
+    send_buffer.erase(0,sent_count);
+  }
 };
 
 tt::chat::server::Server::Server(int port)
@@ -41,16 +46,18 @@ tt::chat::server::Server::Server(int port)
 
 tt::chat::server::Server::~Server() { close(socket_); }
 
+void tt::chat::server::Server::modify_client_status(ClientData* client_ptr, uint32_t events){
+  epoll_event client_ev{};
+  client_ev.events = events;
+  client_ev.data.ptr = static_cast<void*>(client_ptr);
+  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_ptr->fd, &client_ev);
+}
+
 void tt::chat::server::Server::send_message(ClientData* client_ptr, std::string message){
   client_ptr->send_buffer += message;
 
-  // update client's epoll event to write
-  epoll_event client_ev{};
-  client_ev.events = EPOLLIN | EPOLLOUT;
-  client_ev.data.ptr = static_cast<void*>(client_ptr);
-
-  // modify status in epoll_fd list to read and write
-  epoll_ctl(epoll_fd, EPOLL_CTL_MOD, client_ptr->fd, &client_ev);
+  // update client's epoll status to read/write
+  modify_client_status(client_ptr, EPOLLIN | EPOLLOUT);
 }
 
 void tt::chat::server::Server::send_message_to_all_in_channel(ClientData* client_ptr, std::string &message){
@@ -217,26 +224,11 @@ void tt::chat::server::Server::handle_connections() {
         // write operation
         if(events[i].events & EPOLLOUT){
           ClientData* curr_client = static_cast<ClientData*>(events[i].data.ptr);
-          if(!curr_client->send_buffer.empty()){
-            ssize_t sent_count = send(fd, curr_client->send_buffer.c_str(), curr_client->send_buffer.size(), 0);
-            
-            // std::cout << "=====DEBUG=====" << std::endl;
-            // std::cout << fd << std::endl;
-            // std::cout << curr_client->send_buffer << std::endl;
-            // std::cout << sent_count << std::endl;
-            // std::cout << errno << std::endl;
-            // std::cout << "===============" << std::endl;
-
-            check_error(sent_count < 0, "server to client send error\n");
-            curr_client->send_buffer.erase(0,sent_count);
-          }
+          curr_client->send_data_in_buffer();
 
           if(curr_client->send_buffer.empty()){
             // no more data to send, so disable EPOLLOUT by setting to read only mode
-            epoll_event client_ev;
-            client_ev.events = EPOLLIN;
-            client_ev.data.ptr = static_cast<void*>(curr_client);
-            epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fd, &client_ev);
+            modify_client_status(curr_client, EPOLLIN);
           }
         }
       }
