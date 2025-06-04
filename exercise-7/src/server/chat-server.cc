@@ -136,6 +136,19 @@ std::pair<std::string, std::string> tt::chat::server::Server::split_command_and_
   return {command, actual_message};
 }
 
+void tt::chat::server::Server::handle_username_command(ClientData* curr_client_ptr, std::string &username){
+  std::string message = "";
+  if(curr_client_ptr->username.empty()){
+    curr_client_ptr->username = "[" + username + "]";
+    message = "[SERVER]: User " + curr_client_ptr->username + " has joined " + curr_client_ptr->channel + "\n";
+    send_message_to_all_in_channel(curr_client_ptr, message);
+  }
+  else{
+    message = "[SERVER]: Can't change username\n";
+    send_message(curr_client_ptr, message);
+  }
+}
+
 void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
@@ -171,15 +184,7 @@ void tt::chat::server::Server::handle_connections() {
               std::string message = "";
 
               if(command == "/username"){
-                if(curr_client_ptr->username.empty()){
-                  curr_client_ptr->username = "[" + actual_message + "]";
-                  message = "[SERVER]: User " + curr_client_ptr->username + " has joined " + curr_client_ptr->channel + "\n";
-                  send_message_to_all_in_channel(curr_client_ptr, message);
-                }
-                else{
-                  message = "[SERVER]: Can't change username\n";
-                  send_message(curr_client_ptr, message);
-                }
+                handle_username_command(curr_client_ptr, actual_message);
               }
               else if(command == "/create"){
                 // channel creation
