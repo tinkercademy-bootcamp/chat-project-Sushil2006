@@ -88,6 +88,9 @@ void tt::chat::server::Server::accept_all_incoming_client_connections(){
     ClientData* client_ptr = new ClientData(client_fd);
     fd_to_client_map[client_fd] = client_ptr;
 
+    // increment channel count in channel_map
+    channel_map[client_ptr->channel]++;
+
     // add "read from client" event to epoll_fd
     epoll_event client_ev{};
     client_ev.events = EPOLLIN; // event type: read
@@ -95,6 +98,21 @@ void tt::chat::server::Server::accept_all_incoming_client_connections(){
     int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
     check_error(err_code < 0, "EPOLL_CTL_ADD failed for new client\n");
   } 
+}
+
+void tt::chat::server::Server::disconnect_client(int fd){
+  ClientData* del_client_ptr = fd_to_client_map[fd];
+  std::string message = "[SERVER]: User " + del_client_ptr->username + " has left " + del_client_ptr->channel + "\n";
+  send_message_to_all_in_channel(del_client_ptr, message);
+  
+  // properly clean up the client
+  epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr);
+  channel_map[del_client_ptr->channel]--;
+  fd_to_client_map.erase(fd);
+
+  delete del_client_ptr;
+
+  close(fd);
 }
 
 void tt::chat::server::Server::handle_connections() {
@@ -120,17 +138,7 @@ void tt::chat::server::Server::handle_connections() {
           
           if(count <= 0){
             // client disconnected
-
-            // extract pointer to client
-            ClientData* del_client_ptr = fd_to_client_map[fd];
-            std::string message = "[SERVER]: User " + del_client_ptr->username + " has left " + del_client_ptr->channel + "\n";
-            send_message_to_all_in_channel(del_client_ptr, message);
-            
-            // properly clean up the client
-            epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, nullptr); // remove client from epoll_fd
-            delete del_client_ptr; // delete client's ptr
-            fd_to_client_map.erase(fd); // remove him from the map
-            close(fd); // close his socket
+            disconnect_client(fd);
           }
           else{
             std::string curr_client_message = std::string(buffer, buffer+count);

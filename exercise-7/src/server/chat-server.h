@@ -41,6 +41,7 @@ private:
   void modify_client_status(ClientData* client_ptr, uint32_t events);
   void send_message(ClientData* client_ptr, std::string message);
   void send_message_to_all_in_channel(ClientData* client_ptr, std::string &message);
+  void disconnect_client(int fd);
 };
 } // namespace tt::chat::server
 
