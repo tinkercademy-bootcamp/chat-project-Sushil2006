@@ -62,6 +62,34 @@ void tt::chat::server::Server::send_message_to_all_in_channel(ClientData* client
   }
 }
 
+void tt::chat::server::Server::accept_all_incoming_client_connections(){
+  while(true){
+    // accepting a client connection
+    sockaddr_in client_addr{};
+    socklen_t client_len = sizeof(client_addr);
+    int client_fd = accept(socket_, (sockaddr*)&client_addr, &client_len);
+
+    if(client_fd == -1){
+      // no more pending clients to be accepted
+      break;
+    }
+    
+    // make client socket non-blocking
+    make_socket_non_blocking(client_fd);
+
+    // create new client object
+    ClientData* client_ptr = new ClientData(client_fd);
+    fd_to_client_map[client_fd] = client_ptr;
+
+    // add "read from client" event to epoll_fd
+    epoll_event client_ev{};
+    client_ev.events = EPOLLIN; // event type: read
+    client_ev.data.ptr = static_cast<void*>(client_ptr); // store pointer to client object, so that more data about client can be stored
+    int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
+    check_error(err_code < 0, "EPOLL_CTL_ADD failed for new client\n");
+  } 
+}
+
 void tt::chat::server::Server::handle_connections() {
   using namespace tt::chat;
   socklen_t address_size = sizeof(address_);
@@ -74,35 +102,8 @@ void tt::chat::server::Server::handle_connections() {
     for(int i = 0; i < ready_count; ++i){
       int fd = static_cast<ClientData*>(events[i].data.ptr)->fd; // get fd of event
       if(fd == socket_){
-        // there is at least one incoming connection to server
-        // accept all of them, till possible
-        while(true){
-          // accepting a client connection
-          sockaddr_in client_addr{};
-          socklen_t client_len = sizeof(client_addr);
-          int client_fd = accept(socket_, (sockaddr*)&client_addr, &client_len);
-
-          if(client_fd == -1){
-            // no more pending clients to be accepted
-            break;
-          }
-          
-          // make client socket non-blocking
-          make_socket_non_blocking(client_fd);
-
-          // create new client object
-          ClientData* client_ptr = new ClientData(client_fd);
-          fd_to_client_map[client_fd] = client_ptr;
-
-          // add "read from client" event to epoll_fd
-          epoll_event client_ev{};
-          client_ev.events = EPOLLIN; // event type: read
-          client_ev.data.ptr = static_cast<void*>(client_ptr); // store pointer to client object, so that more data about client can be stored
-          int err_code = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_fd, &client_ev);
-          
-          // acknowledge new client connected
-          // std::cout << "New client connected " << " " << client_fd << std::endl;
-        } 
+        // there is at least one incoming connection to server, accept all of them
+        accept_all_incoming_client_connections();
       }
       else{
         // read operation

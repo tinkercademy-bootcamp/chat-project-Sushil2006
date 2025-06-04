@@ -37,6 +37,7 @@ private:
   static void set_socket_options(int sock, int opt);
   int make_socket_non_blocking(int fd);
   void epoll_init();
+  void accept_all_incoming_client_connections();
   void send_message(ClientData* client_ptr, std::string message);
   void send_message_to_all_in_channel(ClientData* client_ptr, std::string &message);
 };
