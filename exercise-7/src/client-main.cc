@@ -34,7 +34,6 @@ std::string read_args(int argc, char *argv[]) {
 // Global message buffer and synchronization
 std::vector<std::string> messages;
 std::mutex msg_mutex;
-std::atomic<bool> running(true);
 
 void update_messages(char buffer[], int bytes_count){
   std::lock_guard<std::mutex> lock(msg_mutex);
@@ -106,13 +105,8 @@ void handle_user_input(WINDOW* input_win, int sock_fd){
   int ch = wgetch(input_win);
   if (ch != ERR) {
     if (ch == '\n') {
-      if (input_line == "/quit") {
-        running = false;
-      }
-      else{
-        send(sock_fd, input_line.c_str(), input_line.size(), 0);
-        input_line.clear();
-      }
+      send(sock_fd, input_line.c_str(), input_line.size(), 0);
+      input_line.clear();
     } else if (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
       if (!input_line.empty()) input_line.pop_back();
     } else if (isprint(ch)) {
@@ -134,7 +128,7 @@ void ui_loop(int sock_fd) {
   scrollok(chat_win, TRUE);
   nodelay(input_win, TRUE);  // make input window non-blocking
 
-  while (running) {
+  while (true) {
     draw_chat_window(chat_win);
     draw_input_window(input_win);
     handle_user_input(input_win, sock_fd);
