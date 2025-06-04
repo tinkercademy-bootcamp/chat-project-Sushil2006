@@ -1,12 +1,12 @@
 #include "chat-gui.h"
 #include "../utils.h"
 
-tt::chat::gui::Gui::Gui(int port){
+tt::chat::gui::Gui::Gui(int port, std::vector<std::string> &messages){
   socket_ = port;
   initialize_screen();
   set_chat_height();
   initialize_windows();
-  ui_loop();
+  ui_loop(messages);
 }
 
 void tt::chat::gui::Gui::initialize_screen(){
@@ -18,7 +18,6 @@ void tt::chat::gui::Gui::initialize_screen(){
 }
 
 void tt::chat::gui::Gui::set_chat_height(){
-  int height, width;
   getmaxyx(stdscr, height, width);
   chat_height = height - input_height;
 }
@@ -31,9 +30,9 @@ void tt::chat::gui::Gui::initialize_windows(){
   nodelay(input_win, TRUE);  // make input window non-blocking
 }
 
-void tt::chat::gui::Gui::ui_loop(){
+void tt::chat::gui::Gui::ui_loop(std::vector<std::string> &messages){
   while (true) {
-    draw_chat_window();
+    draw_chat_window(messages);
     draw_input_window();
     handle_user_input();
 
@@ -41,7 +40,7 @@ void tt::chat::gui::Gui::ui_loop(){
   }
 }
 
-void tt::chat::gui::Gui::draw_chat_window(std::vector<std::string>> &messages){
+void tt::chat::gui::Gui::draw_chat_window(std::vector<std::string> &messages){
   werase(chat_win);
   box(chat_win, 0, 0);
   int start_line = 1;
