@@ -9,6 +9,10 @@ tt::chat::client::Client::Client(int port,
   connect_to_server(socket_, address);
 }
 
+int tt::chat::client::Client::get_socket_fd(){
+  return socket_;
+}
+
 std::string tt::chat::client::Client::send_and_receive_message(
     const std::string &message) {
   using namespace tt::chat;
@@ -29,6 +33,12 @@ std::string tt::chat::client::Client::send_and_receive_message(
   }
 }
 
+void tt::chat::client::Client::set_username(const std::string &username) {
+  // Send the message to the server
+  std::string message = "/username " + username;
+  send(socket_, message.c_str(), message.size(), 0);
+}
+
 tt::chat::client::Client::~Client() { close(socket_); }
 
 sockaddr_in tt::chat::client::Client::create_server_address(
@@ -47,4 +57,30 @@ void tt::chat::client::Client::connect_to_server(
   auto err_code =
       connect(sock, (sockaddr *)&server_address, sizeof(server_address));
   check_error(err_code < 0, "Connection Failed.\n");
+}
+
+void tt::chat::client::Client::receiver_thread(std::vector<std::string> &messages, std::mutex &msg_mutex){
+  while(true){
+    ssize_t bytes_count = recv(socket_, message_buffer, sizeof(message_buffer), 0);
+    if(bytes_count <= 0) break;
+    update_messages(messages, msg_mutex, bytes_count);
+  }
+}
+
+void tt::chat::client::Client::update_messages(std::vector<std::string> &messages, std::mutex &msg_mutex, int bytes_count){
+  std::lock_guard<std::mutex> lock(msg_mutex);
+
+  for(int i = 0; i < bytes_count; ++i){
+    char ch = message_buffer[i];
+    if(messages.empty()) messages.push_back("");
+    if(ch == '\n'){
+      if(messages.back() == "/clear_history"){
+        messages.clear();
+      }
+      messages.push_back("");
+    }
+    else{
+      messages.back().push_back(ch);
+    }
+  }
 }
