@@ -32,7 +32,6 @@ std::string read_args(int argc, char *argv[]) {
 }
 } // namespace
 
-// Global message buffer and synchronization
 std::vector<std::string> messages;
 std::mutex msg_mutex;
 
