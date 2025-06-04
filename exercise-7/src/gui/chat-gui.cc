@@ -1,8 +1,7 @@
 #include "chat-gui.h"
 #include "../utils.h"
 
-tt::chat::gui::Gui::Gui(int port){
-  socket_ = port;
+tt::chat::gui::Gui::Gui(int sock_fd) : socket_(sock_fd){
   initialize_screen();
   set_chat_height();
   initialize_windows();

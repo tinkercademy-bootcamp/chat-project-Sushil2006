@@ -13,7 +13,7 @@
 namespace tt::chat::gui {
 class Gui {
 public:
-  Gui(int port);
+  Gui(int sock_fd);
   void initialize_screen();
   void set_chat_height();
   void initialize_windows();
@@ -21,7 +21,7 @@ public:
   void draw_chat_window(std::vector<std::string> &messages, std::mutex &msg_mutex);
   void draw_input_window();
   void handle_user_input();
-  ~Gui(); // TODO: NEED TO HANDLE DESTRUCTOR AND PROPER CLEANING UP OF VARIABLES
+  // ~Gui(); // TODO: NEED TO HANDLE DESTRUCTOR AND PROPER CLEANING UP OF VARIABLES
 
 private:
   int socket_;
